@@ -1,0 +1,42 @@
+{
+  "version": "2.2.0",
+  "status": "Complete tested release; installed activation is separate",
+  "runtimeHashes": {
+    "v2.2/DistrictsV2.qml": "0dae0ecb9b421742764424cd1db9bbf41455738b063039d3119272e5618d571d",
+    "v2.2/CityV2.js": "e4a12547e2fa7bc948b3ed41431efca78d67ef4222fb9052084ae43a6938b543",
+    "v2.2/CameraV2.js": "ba34c4d23c49aa26f46dbd548f519c619af32411159d0a715da8812e59d5f489",
+    "v2.2/NeonActionV2.qml": "403edafe7394a8e64db6abbb72f2fcc7991c14fc5c3b3c332f19242729e9b1c3",
+    "v2.2/InspectorV2.qml": "ba18d435172fd49d985fe2411904558eea4bdae589f5d8eae29c85bb07e5cb7c",
+    "v2.2/AtlasV2.qml": "dac20df3c40a052b689f2aa89304f7258d5fdc3af0da42b7f880da80a6d6722d",
+    "v2.2/MoveV2.qml": "82b439f99b967794a4578dff791d014f1fabdaf405d222c4bf58480202c8508d",
+    "v2.2/districts.py": "d393b75f989b78b64cfbc42223898f154cc8e7685b9074b36aa303cf044d09a9",
+    "v2.2/PagedListV2.qml": "110c85af07e0d24a5a123fbafe7a3a948381c52d06e0c34450601ba7ab169453",
+    "v2.2/GroupsV2.js": "296c42fecb0aaf0a840d4be74bd5e831f4c8812384de57df6e6ea692e32af182",
+    "v2.2/LegendV2.qml": "396b00217c3076a3956e54257a0ddb387a2f1e5db81bc65fe5128edcf3526f84",
+    "manifest.json": "5b7850e45b25327573a7c36c3fe35d656a7ccd20912533ccd7af9f42d667ec6b",
+    "README.md": "44b058f165dfe122493059bc6ca6a947ddee09e4d20bcfc9c06e92367ad1f227",
+    "LICENSE": "94ca7ed57542f0e3d0bda127524390d008a850de3965df40cbd8997f39300099"
+  },
+  "checks": {
+    "bridge": 45,
+    "modelCameraClassificationCluster": true,
+    "max512DistrictGeometryAndFocusStability": true,
+    "nativePaginationEightLogicalViewports": true,
+    "nativeGroupLegendFiveLogicalViewports": true,
+    "nativeActionsMetadataCancelModal": true,
+    "nativeSevenViewportRasterCaptures": true,
+    "smallestLogical": [
+      912,
+      512
+    ],
+    "fullLabels": [
+      48,
+      64,
+      96
+    ]
+  },
+  "kimi": "Live K3 audit complete; accepted fixes and adjudication in review/GROUPING-DECISIONS.md",
+  "limits": "Native tests use synthetic fixtures on Vic; large/fractional sizes are logical/offscreen own-surface captures; Gus hardware and real relocation remain untested.",
+  "publicNativeScreenshots": "Native Quickshell own-surface captures using synthetic public-app fixtures only",
+  "ci": "Portable state/model checks configured; native Wayland QA performed locally"
+}

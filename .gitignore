@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+verification/*
+!verification/RELEASE.json
+review/*
+!review/README.md

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "nixfred.districts",
+  "name": "Districts",
+  "version": "2.2.0",
+  "author": "Fred Nix",
+  "license": "MIT",
+  "description": "Explore your real desktop as a living isometric city. Workspaces become districts; actual app windows become buildings, with safe navigation and persistent procedural architecture.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "v2.2/DistrictsV2.qml"
+  },
+  "barWidget": {
+    "displayName": "Districts",
+    "category": "Desktop",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "motion": true,
+      "night": true,
+      "edgePan": true
+    },
+    "schema": [
+      {
+        "key": "motion",
+        "type": "boolean",
+        "label": "Living city motion",
+        "defaultValue": true
+      },
+      {
+        "key": "night",
+        "type": "boolean",
+        "label": "Night city",
+        "defaultValue": true
+      },
+      {
+        "key": "edgePan",
+        "type": "boolean",
+        "label": "Edge glide",
+        "defaultValue": true
+      }
+    ]
+  }
+}
