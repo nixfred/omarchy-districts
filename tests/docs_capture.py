@@ -1,11 +1,12 @@
-"""Sanitized native screenshot assets for the public README; synthetic public-app fixture."""
+"""Sanitized native screenshot assets for the public README; small synthetic public-app fixture; stress labels belong only in private QA."""
 import json,time
 from native_session import NativeSession,ROOT,clean_log
 names=['Code','Spotify','Discord','Obsidian','kitty','Brave']
+labels=['Coding','Music','Messages','Notes','Terminal','Browsing']
 icons=['code','spotify','discord','obsidian','kitty','brave-browser']
 fixture={'schema':1,'timestamp':0,'boroughs':[{'id':0,'name':'DP-1'}],
-'districts':[{'id':i+1,'seed':100+i,'monitor':0,'count':1}for i in range(12)],
-'windows':[{'address':hex(i+1),'workspace':i+1,'monitor':0,'app':names[i%6],'class':names[i%6],'icon':icons[i%6],'height':600,'width':900}for i in range(12)]}
+'districts':[{'id':i+1,'seed':100+i,'monitor':0,'count':1,'name':labels[i],'nameSource':'custom','customName':labels[i],'autoName':names[i],'autoSource':'apps'}for i in range(6)],
+'windows':[{'address':hex(i+1),'workspace':i+1,'monitor':0,'app':names[i%6],'class':names[i%6],'icon':icons[i%6],'height':600,'width':900}for i in range(6)]}
 OUT=ROOT/'docs/images';OUT.mkdir(parents=True,exist_ok=True)
 qml='''import QtQuick
 import Quickshell

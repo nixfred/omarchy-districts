@@ -10,9 +10,9 @@
 
 Click the skyline in your bar. Explore. Find an app. Enter its real window—or tidy its workspace with an explicit move. No account, cloud service, Infomarchy installation, or extra Python package is needed.
 
-![Native Districts city with six labeled activity groups](docs/images/city-native.png)
+![Native Districts city with six readable neighborhoods and activity groups](docs/images/city-native.png)
 
-*Actual Quickshell rendering with a synthetic public-app fixture. Every screenshot in this README is captured from the native plugin’s own surface; no private desktop contents were photographed.*
+*Actual Quickshell rendering with six representative neighborhoods and sanitized public-app names. Crowded stress fixtures and repeated long labels are kept out of showcase images. Every screenshot in this README is captured from the native plugin’s own surface; no private desktop contents were photographed.*
 
 ## A city that makes sense
 
@@ -114,9 +114,10 @@ A 30-window native fixture measured about **1.25% of one CPU core** with ambient
 
 Runtime source is in `v2.2/`; root copies support the local test harness. Keep them byte-identical when changing runtime code. `install.py` copies only the validated 14-file release, not test logs, private desktop backups or review infrastructure.
 
-Portable checks need Python and Node, with no Python package installation:
+No compilation or bundle step is needed. The [development guide](docs/DEVELOPMENT.md) describes the standalone layout, dependencies and historical diagnostics. Portable checks need Python and Node, with no Python package installation:
 
 ```bash
+python3 tools/check-project.py
 python3 -m unittest discover -s tests -p 'test_bridge.py'
 node tests/model.js
 node tests/camera.js

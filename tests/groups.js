@@ -40,6 +40,6 @@ const saved=g.appEntries({windows:[]},{rules:{code:'research'},colors:{}});asser
 let texts=[];const ctx=new Proxy({},{get(t,k){return k in t?t[k]:(...args)=>{if(k==='fillText')texts.push(args[0])}},set(t,k,v){t[k]=v;return true}});
 let small=c.transition({buildings:[]},c.layout({...many,districts:many.districts.slice(0,12),windows:many.windows.slice(0,12)}),false,0);
 c.draw(ctx,small,{accent:'#ffffff',ink:'#ffffff',neons:g.groups.map(g=>g.color),ground:'#111111',foundation:'#111111',left:'#111111',right:'#111111',roof:'#111111',roofActive:'#222222'},'',-1,0,false,1,null,'');
-assert.equal(texts.filter(t=>t.includes('DISTRICTS')).length,6,'all city labels paint without JS exceptions');
+assert.equal(texts.filter(t=>/ \d+ DISTRICTS?$/.test(t)).length,6,'all city labels paint without JS exceptions');
 for(const group of small.groups){const p=c.project(group.x,group.y);assert.equal(c.hit(small,p.x,p.y-8,1).type,'group');assert.equal(c.hit(small,p.x,p.y-8,1).key,group.key)}
 console.log('PASS: color/rule edits preserve settling; saved inactive rules remain editable; group headers paint and hit their group.');

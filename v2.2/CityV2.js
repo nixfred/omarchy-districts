@@ -13,6 +13,7 @@ function pointInPolygon(x,y,poly) {
   }
   return hit
 }
+function count(n,one,many){return n+' '+(n===1?one:many)}
 function activityName(snapshot,id){var names=[];(snapshot.windows||[]).forEach(function(w){if(w.workspace===id&&names.indexOf(w.app)<0)names.push(w.app)});names.sort();return names.length?names.slice(0,3).join(' + ').slice(0,48):'Workspace '+id}
 function layout(snapshot) {
   var boroughs=snapshot.boroughs||[],districts=snapshot.districts||[],windows=snapshot.windows||[]
@@ -24,7 +25,6 @@ function layout(snapshot) {
   clusters.forEach(function(g,i){colWidths[i%3]=Math.max(colWidths[i%3],g.width);var row=Math.floor(i/3);rowHeights[row]=Math.max(rowHeights[row]||0,g.height)})
   var result={districts:[],buildings:[],roads:[],boroughs:[],groups:[],bounds:{minX:0,maxX:1,minY:0,maxY:1}}
   clusters.forEach(function(g,gi){var column=gi%3,row=Math.floor(gi/3),baseX=0,baseY=0;for(var c=0;c<column;c++)baseX+=colWidths[c]+170;for(var r=0;r<row;r++)baseY+=rowHeights[r]+170
-    result.groups.push({key:g.key,name:g.list[0].groupName||g.key,color:g.list[0].groupColor||'#aebbd0',count:g.list.length,x:baseX+(g.cols-1)*310/2,y:baseY-205,width:g.width,height:g.height})
     g.list.forEach(function(d,i){var mi=monitorIds.indexOf(d.monitor);if(mi<0)mi=monitorIds.length
       var x=baseX+(i%g.cols)*310,y=baseY+Math.floor(i/g.cols)*330
       var item={id:d.id,seed:d.seed,monitor:d.monitor,count:d.count,x:x,y:y,size:240,
@@ -32,6 +32,7 @@ function layout(snapshot) {
        group:g.key,groupName:d.groupName||g.key,groupColor:d.groupColor||'#aebbd0',groupReason:d.groupReason||'',groupPending:!!d.groupPending,hue:d.seed%360,borough:mi}
       result.districts.push(item);positions[d.id]=item
     })
+    result.groups.push({key:g.key,name:g.list[0].groupName||g.key,color:g.list[0].groupColor||'#aebbd0',count:g.list.length,x:0,y:0,width:g.width,height:g.height})
   })
   boroughs.forEach(function(b){var d=result.districts.find(function(d){return d.monitor===b.id});if(d)result.boroughs.push({name:b.name,id:b.id,x:d.x,y:d.y,focused:b.focused})})
   var byDistrict={}
@@ -47,6 +48,12 @@ function layout(snapshot) {
         focused:w.focused,urgent:w.urgent,floating:w.floating,width:w.width,windowHeight:w.height,tint:d.tint,group:d.group,groupColor:d.groupColor,circuitOverride:d.circuitOverride,x:x,y:y,size:size,height:height,style:h%4,seed:h,monitor:w.monitor})
     }
   }
+  // Headings sit just above each cluster's tallest structure, centred on screen. Building tops reserve the focus marker, so
+  // changing focus never moves a heading.
+  result.groups.forEach(function(g){var xs=[],top=Infinity
+    result.districts.forEach(function(d){if(d.group!==g.key)return;xs.push(project(d.x,d.y).x);top=Math.min(top,project(d.x-120,d.y-120,0).y,project(d.x+44,d.y-101,140).y)})
+    result.buildings.forEach(function(b){if(b.group===g.key)top=Math.min(top,project(b.x-b.size/2,b.y-b.size/2,b.height+(b.style===0?14:0)+31).y)})
+    var at=unproject((Math.min.apply(null,xs)+Math.max.apply(null,xs))/2,top-16);g.x=at.x;g.y=at.y})
   var grid={};result.districts.forEach(function(d){grid[d.group+'|'+d.x+'|'+d.y]=d})
   result.districts.forEach(function(d){[[310,0],[0,330]].forEach(function(delta){var e=grid[d.group+'|'+(d.x+delta[0])+'|'+(d.y+delta[1])];if(e)result.roads.push({a:project(d.x,d.y+120),b:project(e.x,e.y+120),seed:d.seed})})})
   var corners=[]
@@ -199,9 +206,9 @@ function draw(ctx,scene,palette,selected,districtSelected,time,motion,scale,view
     for(var ring=0;ring<2;ring++){var plaza=p(3,65,2);ctx.beginPath();ctx.ellipse(plaza.x,plaza.y,18+ring*8,8+ring*4,0,0,Math.PI*2);ctx.strokeStyle=color(palette.accent,.4-ring*.1);ctx.lineWidth=1;ctx.stroke()}
     landmark(ctx,d,p,palette)
     ctx.font='500 '+(13/scale)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(palette.ink,.9);var label=p(0,145,0);if(scale>.26||d.id===districtSelected)ctx.fillText((d.pinned?'★ ':'')+d.name.toUpperCase(),label.x,label.y)
-    ctx.font=(10/scale)+'px sans-serif';ctx.fillStyle=color(palette.ink,.6);if(scale>.44)ctx.fillText('D'+d.id+' / '+d.count+' WINDOWS · '+(d.groupName||d.landmark).toUpperCase(),label.x,label.y+16/scale)
+    ctx.font=(10/scale)+'px sans-serif';ctx.fillStyle=color(palette.ink,.6);if(scale>.44)ctx.fillText('D'+d.id+' / '+count(d.count,'WINDOW','WINDOWS')+' · '+(d.groupName||d.landmark).toUpperCase(),label.x,label.y+16/scale)
   })
   scene.buildings.slice().sort(function(a,b){return (a.x+a.y)-(b.x+b.y)}).forEach(function(b){var pos=project(b.x,b.y,b.height/2);if(!view||(pos.x+100>view.minX&&pos.x-100<view.maxX&&pos.y+120>view.minY&&pos.y-120<view.maxY))building(ctx,b,palette,selected,time,scale,lens)})
-  ;(scene.groups||[]).forEach(function(g){if(scale<=.25)return;var p=project(g.x,g.y);ctx.font='600 '+(14/scale)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(g.color,.95);ctx.fillText(g.name.toUpperCase()+' / '+g.count+' DISTRICTS',p.x,p.y)})
+  ;(scene.groups||[]).forEach(function(g){if(scale<=.25)return;var p=project(g.x,g.y);ctx.font='600 '+(14/scale)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(g.color,.95);ctx.fillText(g.name.toUpperCase()+' / '+count(g.count,'DISTRICT','DISTRICTS'),p.x,p.y)})
   if(!(scene.groups||[]).length)scene.boroughs.forEach(function(b){var p=project(b.x,b.y,0);ctx.font='600 '+(12/scale)+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(palette.accent,.95);ctx.fillText(b.name.toUpperCase()+' / BOROUGH',p.x,p.y)})
 }

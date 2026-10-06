@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
+      - run: python3 tools/check-project.py
       - run: python3 -m unittest discover -s tests -p 'test_bridge.py'
       - run: node tests/model.js
       - run: node tests/camera.js

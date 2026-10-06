@@ -25,7 +25,7 @@ Item {
  function showInfo(){view="info"}
  function showStyle(){view="style"}
  function showList(){view="list"}
- readonly property var entries:(city.district?(city.lens?city.tracedBuildings:city.currentBuildings):city.scene.districts).map(function(d){return {key:d.key?"window:"+d.key:"district:"+d.id,label:d.app||d.name,subtitle:d.app?"D"+d.workspace+" / "+(d.floating?"Floating window":"Tiled window"):"D"+d.id+" / "+d.count+" windows",payload:d}})
+ readonly property var entries:(city.district?(city.lens?city.tracedBuildings:city.currentBuildings):city.scene.districts).map(function(d){return {key:d.key?"window:"+d.key:"district:"+d.id,label:d.app||d.name,subtitle:d.app?"D"+d.workspace+" / "+(d.floating?"Floating window":"Tiled window"):"D"+d.id+" / "+d.count+(d.count===1?" window":" windows"),payload:d}})
  Rectangle{anchors.fill:parent;color:city.panelPaper;border.color:Qt.alpha(city.accent,.22);radius:14}
  Item{id:content;anchors.fill:parent;anchors.margins:16
   Row{id:tabs;visible:!!pane.city.district&&!pane.city.nameEditing;width:parent.width;spacing:4
@@ -42,7 +42,7 @@ Item {
      Text{width:parent.width-34;text:pane.city.selectedBuilding?pane.city.selectedBuilding.app:"";font.pixelSize:body.height<300?18:20;color:pane.city.ink;wrapMode:Text.Wrap;textFormat:Text.PlainText}
     }
     Text{visible:!pane.city.selectedBuilding;width:parent.width;text:pane.city.district?pane.city.district.name:"";font.pixelSize:body.height<300?18:20;color:pane.city.ink;wrapMode:Text.Wrap;textFormat:Text.PlainText}
-    Text{width:parent.width;text:pane.city.selectedBuilding?(pane.city.selectedBuilding.floating?"Floating":"Tiled")+" window\n"+pane.city.selectedBuilding.width+" × "+pane.city.selectedBuilding.windowHeight+" pixels":pane.city.district?pane.city.district.count+" windows / "+({custom:"Your label",workspace:"Workspace name",apps:"Observed app mix",number:"Workspace number"})[pane.city.district.nameSource]:"";font.pixelSize:13;color:Qt.alpha(pane.city.ink,.7);wrapMode:Text.Wrap;textFormat:Text.PlainText}
+    Text{width:parent.width;text:pane.city.selectedBuilding?(pane.city.selectedBuilding.floating?"Floating":"Tiled")+" window\n"+pane.city.selectedBuilding.width+" × "+pane.city.selectedBuilding.windowHeight+" pixels":pane.city.district?pane.city.district.count+(pane.city.district.count===1?" window / ":" windows / ")+({custom:"Your label",workspace:"Workspace name",apps:"Observed app mix",number:"Workspace number"})[pane.city.district.nameSource]:"";font.pixelSize:13;color:Qt.alpha(pane.city.ink,.7);wrapMode:Text.Wrap;textFormat:Text.PlainText}
     NeonActionV2{id:enterButton;city:pane.city;width:parent.width;primary:true;text:pane.city.selectedBuilding?"Enter app window ↗":"Visit workspace ↗";enabled:!pane.city.actionBusy&&!pane.city.metadataBusy;onClicked:pane.city.navigate()}
 
    }

@@ -57,7 +57,7 @@ Item {
   readonly property var pinnedDistricts: scene.districts.filter(function(d){return d.pinned})
   readonly property var atlasResults: {
     var q=queryText.trim().toLowerCase(),out=[]
-    scene.districts.slice().sort(function(a,b){return Number(b.pinned)-Number(a.pinned)||a.id-b.id}).forEach(function(d){if(!q||(d.name+" district "+d.id).toLowerCase().indexOf(q)>=0)out.push({type:"district",key:d.id,label:d.name,subtitle:"D"+d.id+" · "+d.count+" windows"})})
+    scene.districts.slice().sort(function(a,b){return Number(b.pinned)-Number(a.pinned)||a.id-b.id}).forEach(function(d){if(!q||(d.name+" district "+d.id).toLowerCase().indexOf(q)>=0)out.push({type:"district",key:d.id,label:d.name,subtitle:"D"+d.id+" · "+d.count+(d.count===1?" window":" windows")})})
     snapshot.windows.forEach(function(w){if(!q||(w.app+" "+w.class+" "+root.districtName(w.workspace)).toLowerCase().indexOf(q)>=0)out.push({type:"building",key:w.address,label:w.app,subtitle:root.districtName(w.workspace)})})
     return out
   }
@@ -400,7 +400,7 @@ Item {
             NeonActionV2{required property var modelData;city:root;width:150;text:"★ "+modelData.name;onClicked:root.focusDistrict(modelData.id)}
           }
         }
-        NeonActionV2{city:root;visible:!!root.lens;x:12;y:60;text:"Tracing "+root.lens+"  ·  "+root.tracedBuildings.length+" windows   ×";onClicked:{root.lens="";root.paint()}}
+        NeonActionV2{city:root;visible:!!root.lens;x:12;y:60;text:"Tracing "+root.lens+"  ·  "+root.tracedBuildings.length+(root.tracedBuildings.length===1?" window   ×":" windows   ×");onClicked:{root.lens="";root.paint()}}
         Rectangle{id:hoverCard;visible:root.hoverTarget!==null&&!mapInput.pressed&&!edgeTimer.running&&!root.legendOpen&&!root.atlasOpen&&!root.nameEditing&&!root.moveDraft
           x:City.clamp(root.pointer.x+16,8,stage.width-width-8);y:City.clamp(root.pointer.y-50,60,stage.height-height-8);width:Math.min(250,hoverText.implicitWidth+24);height:36;radius:6;color:root.panelPaper;border.color:Qt.alpha(root.accent,.55)
           Text{id:hoverText;anchors.centerIn:parent;width:parent.width-20;elide:Text.ElideRight;font.pixelSize:12;color:root.ink;textFormat:Text.PlainText;text:{if(!root.hoverTarget)return "";if(root.hoverTarget.type==="group")return Groups.info(root.hoverTarget.key).name+" / Group city";if(root.hoverTarget.type==="district")return root.districtName(root.hoverTarget.key);var b=root.scene.buildings.filter(function(b){return b.key===root.hoverTarget.key})[0];return b?b.app+" / "+root.districtName(b.workspace):""}}
@@ -418,7 +418,7 @@ Item {
       }
       Column{x:root.ui.margin;y:25;spacing:6
         Text{text:"D I S T R I C T S";color:root.ink;font.pixelSize:root.ui.compact?27:32;font.weight:Font.Light}
-        Text{text:(root.testMode&&!root.testLiveBridge?"VALIDATION FIXTURE / ":"")+root.snapshot.districts.length+" NEIGHBORHOODS   /   "+root.snapshot.windows.length+" APP WINDOWS";color:Qt.alpha(root.ink,.6);font.pixelSize:11;font.letterSpacing:1}
+        Text{text:(root.testMode&&!root.testLiveBridge?"VALIDATION FIXTURE / ":"")+City.count(root.snapshot.districts.length,"NEIGHBORHOOD","NEIGHBORHOODS")+"   /   "+City.count(root.snapshot.windows.length,"APP WINDOW","APP WINDOWS");color:Qt.alpha(root.ink,.6);font.pixelSize:11;font.letterSpacing:1}
       }
       Row{anchors.right:parent.right;anchors.rightMargin:root.ui.margin;y:28;spacing:8
         NeonActionV2{city:root;text:"Groups";onClicked:root.openLegend()}

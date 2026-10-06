@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import "GroupsV2.js" as Groups
+import "CityV2.js" as City
 Item {
  id:legend
  required property var city
@@ -18,7 +19,7 @@ Item {
  property alias testBack:backButton
  property alias testRuleContent:ruleContent
  property alias testColorContent:colorContent
- readonly property var groupEntries:Groups.groups.map(function(g){return {key:g.key,label:g.name,color:Groups.color(g.key,legend.city.groupingPreferences),subtitle:legend.city.scene.districts.filter(function(d){return d.group===g.key}).length+" districts / Edit group color",payload:g}})
+ readonly property var groupEntries:Groups.groups.map(function(g){return {key:g.key,label:g.name,color:Groups.color(g.key,legend.city.groupingPreferences),subtitle:City.count(legend.city.scene.districts.filter(function(d){return d.group===g.key}).length,"district","districts")+" / Edit group color",payload:g}})
  readonly property var appEntries:Groups.appEntries(city.snapshot,city.groupingPreferences)
  function showGroups(){view="groups";ruleApp=null}
  function editColor(key){groupKey=key;colorInput.text=Groups.color(key,city.groupingPreferences);view="color"}
