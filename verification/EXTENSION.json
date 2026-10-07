@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "version": "3.0.0",
-  "status": "Local extension candidate; unpublished and not installed",
-  "verifiedSourceSnapshot": "09ec9333ecb275f000c3fa123ddb778fde4a6135",
-  "runtimeGitTree": "8a99dc02524ed95e0f3424973a428085717d5ada",
+  "status": "Validated release candidate; publication/installation verified by their separate exact-commit receipts",
+  "verifiedSourceSnapshot": "1f9b2e379448b1f119233a3bb3606530d9f3b9af",
+  "runtimeGitTree": "3ae7fa45fa96b7996d1e12192551ea3c8f9e8add",
   "frozenSourceSnapshot": "63033968265c6795eeb7be1f588874c434a6b45c",
   "frozenEvidence": "RELEASE.json is unchanged and applies only to its named snapshot",
   "releaseFiles": 33,
@@ -32,7 +32,7 @@
     "v3.0.0/history.py": "77abb7a1fa73b25486266d27ea1e1784af228646fa24a7c4d6e1f98e3c7ffc9e",
     "v3.0.0/organize.py": "12840f97b86d5740adf5daf963355fcf3a25a9b4558dc8cdcac180809a7a9319",
     "v3.0.0/resources.py": "dae63e8b40e1673adfda8c959261b624ab8e361659cecb83434f8929d0aa4d5a",
-    "v3.0.0/sessions.py": "b328314f0c3f957732c77e042663fbee216b979e7e7edca3b92c803eca65e645",
+    "v3.0.0/sessions.py": "fb07d95e3865e4553c0e0e96268f02a516c12136dc27deb54c4d09e1357fbcb9",
     "v3.0.0/provider_claude.py": "b0c8a233c38176da80bc6bad44c863ecf97e545fc42ce4291110f716ab3eeeb6",
     "v3.0.0/provider_grok.py": "dbf146fdd699f000c7d5256635e3e15ef4ee432861cae73bdbb56587477688b2",
     "v3.0.0/provider_pi.py": "cd88b7c2dc1d6a93c6b830d626145857c94b09ca68980207c2937d311f63bd68",
@@ -40,11 +40,11 @@
     "v3.0.0/ProviderLegendV2.js": "d7a093e4b3a9a5ce75dc2009b714045371076af19c1cf7e2cf9fc60ce50e05ee",
     "v3.0.0/ProviderLegendV2.qml": "dcfeda0785ef783ad7f179cd06cdb872174b0eb22fc000a0a2adb6395a152cc0",
     "manifest.json": "f7c12fd50e8b8e429723c915e493a0fb67ed596bc2f4de15896135a584191e15",
-    "README.md": "d0344d01b7b40736e1ffc64821027f5e2948f4cd2efc0c3df13db43a53791939",
+    "README.md": "1942629051c48d1ae0cc4ea4482fbb4ae713fabd38fc3c22a09a162396f95342",
     "LICENSE": "94ca7ed57542f0e3d0bda127524390d008a850de3965df40cbd8997f39300099"
   },
   "checks": {
-    "portablePythonCases": 229,
+    "portablePythonCases": 230,
     "javascriptSuites": [
       "model",
       "camera",
@@ -60,7 +60,7 @@
       "UTC",
       "America/New_York:date-rollover-and-DST"
     ],
-    "offscreenAgentDeskCases": 12,
+    "offscreenAgentDeskCases": 13,
     "offscreenProviderLegendCases": 4,
     "nativeSyntheticIntegrated": true,
     "nativeViewportLogicalSizes": [
@@ -93,7 +93,8 @@
       "actualLocalRecoveryTimezone",
       "orbitReplayAndActionGuards"
     ],
-    "rootRuntimeByteParity": true
+    "rootRuntimeByteParity": true,
+    "postAuditQuotaRegression": "Ninth quota bucket retained as most-behind; eight displayed with overflow1"
   },
   "localProviderMetadataCheck": {
     "combinedCap": 128,
@@ -110,13 +111,27 @@
       "codex": "Existing authenticated daemon account/rateLimits/read: normalized percentage, duration minutes and Unix-second reset; ordinaryUsageAllowed observed",
       "grok": "Unavailable: no supported stamped source",
       "kimi": "Unavailable: no canonical stamped source"
-    }
+    },
+    "scope": "Historical metadata-only sample before user reboot; not a claim of current live sessions"
   },
   "review": {
     "focusedLocalDisposition": "No remaining concrete blocker found in corrected paths; independent 77 provider and 27 session cases passed",
-    "correctedExternalGrokReview": "Not performed; source-disclosure approval pending",
+    "correctedExternalGrokReview": "Completed source-only; no concrete release blocker; three nonblocking findings triaged",
     "auditSourceFileCount": 47,
-    "auditSourceBytes": 516715
+    "auditSourceBytes": 516715,
+    "externalModel": "grok-4.7-build",
+    "externalAuditedSource": "09ec9333ecb275f000c3fa123ddb778fde4a6135",
+    "finishReason": "stop",
+    "toolsProvided": [],
+    "promptSha256": "b3dac3347e50b7894a5fca2059cc3e51b9f0b54067cde342f510acf9d5870ad4",
+    "responseSha256": "80aea48e8be68a439c0220a24eadf89a3b84cb0ded6504bceb8ea6cd292760bf",
+    "elapsedSeconds": 1088.37,
+    "findingDispositions": {
+      "quotaBuckets": "Validated, corrected, regression checked locally",
+      "sameSessionReplyNavigation": "Disproved by actual Qt response/text-page preservation tests",
+      "monotonicClockReset": "Incorrect premise; shared host clock independently checked"
+    },
+    "postAuditSourceUpload": false
   },
   "limits": [
     "Synthetic no-focus native fixtures do not establish live visible user QA.",
@@ -125,6 +140,6 @@
     "Claude immediate subagent parent is unknown; Grok stored status and Pi current in-memory branch are unknown.",
     "Kimi model configuration does not establish a saved or live Kimi3 session.",
     "Quota pacing is allowance-equivalent credit under a fixed-window even-pace model, not guaranteed compute time or rate-limit unblocking.",
-    "Remote publication, published-commit CI, external final audit and scoped activation remain unperformed for this extension."
+    "Publication, exact published-commit CI, scoped installation and live visible QA require their own receipts; this source evidence does not assert them."
   ]
 }
