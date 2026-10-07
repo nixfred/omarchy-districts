@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "version": "3.0.0",
+  "status": "Local extension candidate; unpublished and not installed",
+  "verifiedSourceSnapshot": "09ec9333ecb275f000c3fa123ddb778fde4a6135",
+  "runtimeGitTree": "8a99dc02524ed95e0f3424973a428085717d5ada",
+  "frozenSourceSnapshot": "63033968265c6795eeb7be1f588874c434a6b45c",
+  "frozenEvidence": "RELEASE.json is unchanged and applies only to its named snapshot",
+  "releaseFiles": 33,
+  "rootRuntimePairs": 30,
+  "releaseSha256": {
+    "v3.0.0/AgentCityV2.js": "71ed3eac1dd74ce95bd68d8742b22293ec2d1ef52edbc3ea33baef06c784986a",
+    "v3.0.0/AgentV2.qml": "eeee5670142eb920d88d187cd56cbf443973737ef66fb86ce3e6d4f5242de744",
+    "v3.0.0/AtlasV2.qml": "dac20df3c40a052b689f2aa89304f7258d5fdc3af0da42b7f880da80a6d6722d",
+    "v3.0.0/CameraV2.js": "5df089b2d2d5c13237c2620d883ab9387e0e52a040fec543acee1c7a697d7797",
+    "v3.0.0/CityV2.js": "f766262d10cc7a9b370156ff00be4f87f6c38cb184e8f8e767f22ef02ddaf864",
+    "v3.0.0/DistrictsV2.qml": "659d29a8363b7c8e99bf721fcdf7e3b59905664241767219765dff09778bd47b",
+    "v3.0.0/GroupsV2.js": "0c74313908a9787cdfcbcd4d287e0dd08f4456aa1b21937f0a59aaaaef5a01dc",
+    "v3.0.0/InspectorV2.qml": "e436b3a892d5b0c4bab156054b83fd6c9897bd1b0d2c195c65669bfb1ac3c4f8",
+    "v3.0.0/LegendV2.qml": "059b66b4f6d0ba3e2923cb0b13ed6ec0a1bc778310ff59ebbe6962ffe9de753f",
+    "v3.0.0/LensV2.js": "77150368d47816d026d0299e0aac4a8e050cfcb3019e006d9be9fd57c14f80f8",
+    "v3.0.0/LensV2.qml": "5f2297d3d7749adea7ad317088472013d30ba8a46fa597b4cee3f580b84fafae",
+    "v3.0.0/MoveV2.qml": "33b498bf41901a82b5b8535baddac8500b4a742be624f38faa02951d7fdc2001",
+    "v3.0.0/NavigationV2.js": "b954fd18c826239aa7409adae6d23c07ce6b0c7c0531703d434b78c5d6328f00",
+    "v3.0.0/NavigationV2.qml": "16c03e57f4e1c7d2457af770aa0e62336eb2eb90f32675f0a5bb1600461b3cf2",
+    "v3.0.0/NeonActionV2.qml": "403edafe7394a8e64db6abbb72f2fcc7991c14fc5c3b3c332f19242729e9b1c3",
+    "v3.0.0/OrganizeV2.qml": "8629af4202c661e4d9bd29f0c4e479245a97ca1f7564b8eef3599d1cc75a453f",
+    "v3.0.0/PagedListV2.qml": "110c85af07e0d24a5a123fbafe7a3a948381c52d06e0c34450601ba7ab169453",
+    "v3.0.0/ResourcesV2.js": "1feaea437f5eb0894ec677fdc2dbad3ae47d938b62e5e0a95d3d130ba56c03b2",
+    "v3.0.0/ResourcesV2.qml": "8a882e800302b48ec8883e1a3268c7eee95b28276556ddfebc321f8f510106b8",
+    "v3.0.0/districts.py": "443426924f772c5280df7449b90886df4f4f71594b0667bc2007b0566a19a1be",
+    "v3.0.0/history.py": "77abb7a1fa73b25486266d27ea1e1784af228646fa24a7c4d6e1f98e3c7ffc9e",
+    "v3.0.0/organize.py": "12840f97b86d5740adf5daf963355fcf3a25a9b4558dc8cdcac180809a7a9319",
+    "v3.0.0/resources.py": "dae63e8b40e1673adfda8c959261b624ab8e361659cecb83434f8929d0aa4d5a",
+    "v3.0.0/sessions.py": "b328314f0c3f957732c77e042663fbee216b979e7e7edca3b92c803eca65e645",
+    "v3.0.0/provider_claude.py": "b0c8a233c38176da80bc6bad44c863ecf97e545fc42ce4291110f716ab3eeeb6",
+    "v3.0.0/provider_grok.py": "dbf146fdd699f000c7d5256635e3e15ef4ee432861cae73bdbb56587477688b2",
+    "v3.0.0/provider_pi.py": "cd88b7c2dc1d6a93c6b830d626145857c94b09ca68980207c2937d311f63bd68",
+    "v3.0.0/provider_metrics.py": "363eae7cf4e0117edd082d745695dc148ac2bd0363df70705efa4fa636006f3a",
+    "v3.0.0/ProviderLegendV2.js": "d7a093e4b3a9a5ce75dc2009b714045371076af19c1cf7e2cf9fc60ce50e05ee",
+    "v3.0.0/ProviderLegendV2.qml": "dcfeda0785ef783ad7f179cd06cdb872174b0eb22fc000a0a2adb6395a152cc0",
+    "manifest.json": "f7c12fd50e8b8e429723c915e493a0fb67ed596bc2f4de15896135a584191e15",
+    "README.md": "d0344d01b7b40736e1ffc64821027f5e2948f4cd2efc0c3df13db43a53791939",
+    "LICENSE": "94ca7ed57542f0e3d0bda127524390d008a850de3965df40cbd8997f39300099"
+  },
+  "checks": {
+    "portablePythonCases": 229,
+    "javascriptSuites": [
+      "model",
+      "camera",
+      "groups",
+      "activity",
+      "orbit",
+      "agents_city",
+      "navigation",
+      "lens",
+      "provider_legend"
+    ],
+    "timezoneTests": [
+      "UTC",
+      "America/New_York:date-rollover-and-DST"
+    ],
+    "offscreenAgentDeskCases": 12,
+    "offscreenProviderLegendCases": 4,
+    "nativeSyntheticIntegrated": true,
+    "nativeViewportLogicalSizes": [
+      [
+        912,
+        512
+      ],
+      [
+        1093,
+        614
+      ],
+      [
+        1600,
+        1000
+      ]
+    ],
+    "nativeFocusPreserved": true,
+    "nativeChecks": [
+      "sharedDesk",
+      "exactProviderIdentity",
+      "metadataOnlySelection",
+      "storedSelector",
+      "providerFilterTransportIdentity",
+      "wrongSessionReplyRejected",
+      "selectionRoundTripEpoch",
+      "unselectedReadRejected",
+      "draftAndSubmissionIsolation",
+      "signedBehindPace",
+      "noAdditionalUsageWait",
+      "actualLocalRecoveryTimezone",
+      "orbitReplayAndActionGuards"
+    ],
+    "rootRuntimeByteParity": true
+  },
+  "localProviderMetadataCheck": {
+    "combinedCap": 128,
+    "counts": {
+      "codex": 42,
+      "claude": 42,
+      "grok": 42,
+      "pi": 2
+    },
+    "boundedWithExplicitOmissionNotice": true,
+    "kimi3Recorded": 0,
+    "quotaSources": {
+      "claude": "Stamped local Claude quota probe cache: 3 windows; fixed-duration pace for 2",
+      "codex": "Existing authenticated daemon account/rateLimits/read: normalized percentage, duration minutes and Unix-second reset; ordinaryUsageAllowed observed",
+      "grok": "Unavailable: no supported stamped source",
+      "kimi": "Unavailable: no canonical stamped source"
+    }
+  },
+  "review": {
+    "focusedLocalDisposition": "No remaining concrete blocker found in corrected paths; independent 77 provider and 27 session cases passed",
+    "correctedExternalGrokReview": "Not performed; source-disclosure approval pending",
+    "auditSourceFileCount": 47,
+    "auditSourceBytes": 516715
+  },
+  "limits": [
+    "Synthetic no-focus native fixtures do not establish live visible user QA.",
+    "No existing user-session reply was read or instruction sent during these checks.",
+    "Only verified loaded Codex CLI sessions expose instruction queue capability; actual delivery remains untested.",
+    "Claude immediate subagent parent is unknown; Grok stored status and Pi current in-memory branch are unknown.",
+    "Kimi model configuration does not establish a saved or live Kimi3 session.",
+    "Quota pacing is allowance-equivalent credit under a fixed-window even-pace model, not guaranteed compute time or rate-limit unblocking.",
+    "Remote publication, published-commit CI, external final audit and scoped activation remain unperformed for this extension."
+  ]
+}

@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -16,11 +17,58 @@ import tempfile
 import time
 import unicodedata
 
-VERSION = "2.2.0"
+VERSION = "3.0.0"
+
+class OwnerCpuSampler:
+    """Active-view, bounded /proc owner CPU; never reads child PIDs or command lines."""
+    interval = 2.5
+
+    def __init__(self, proc=Path('/proc')):
+        self.proc = proc
+        self.history = {}
+        self.reads = 0
+
+    def stats(self, pid):
+        fields = (self.proc / str(pid) / 'stat').read_text().rsplit(')', 1)[1].split()
+        self.reads += 1
+        return int(fields[11]) + int(fields[12]), int(fields[19])
+
+    def sample(self, windows, now=None):
+        now = time.monotonic() if now is None else now
+        pids = {w.get('pid') for w in windows if type(w.get('pid')) is int and 0 < w['pid'] <= 2147483647}
+        self.history = {pid: record for pid, record in self.history.items() if pid in pids}
+        for pid in pids:
+            previous = self.history.get(pid)
+            if previous and now - previous['at'] < self.interval:
+                continue
+            result = {'state': 'unavailable', 'percent': None, 'smoothedPercent': None, 'level': 0,
+                      'scope': 'window-owner-process'}
+            record = {'at': now, 'ticks': None, 'start': None, 'smooth': 0, 'result': result}
+            try:
+                ticks, start = self.stats(pid)
+                record.update(ticks=ticks, start=start)
+                result['state'] = 'sampling'
+                result['startTime'] = start
+                if previous and previous['start'] == start and previous['ticks'] is not None and ticks >= previous['ticks']:
+                    elapsed = now - previous['at']
+                    percent = (ticks - previous['ticks']) / os.sysconf('SC_CLK_TCK') / elapsed * 100
+                    smooth = previous['smooth'] + (percent - previous['smooth']) * (1 - math.exp(-elapsed / 6))
+                    record['smooth'] = smooth
+                    result.update(state='measured', percent=round(percent, 2), smoothedPercent=round(smooth, 2),
+                                  level=max(0, min(1, smooth / 100)))
+            except (OSError, ValueError, IndexError):
+                pass
+            self.history[pid] = record
+        for window in windows:
+            pid = window.get('pid')
+            record = self.history.get(pid) if type(pid) is int else None
+            window['ownerCpu'] = dict(record['result']) if record else {
+                'state': 'unavailable', 'percent': None, 'smoothedPercent': None, 'level': 0,
+                'scope': 'window-owner-process'}
 ADDRESS = re.compile(r"^0x[0-9a-fA-F]{1,16}$")
 APP = re.compile(r"[^\w .+@()-]", re.UNICODE)
 LIMIT = 512
-GROUP_COLORS = {'development':'#57dfff','entertainment':'#b99cff','communication':'#fc69d5','research':'#b0fca9','system':'#ffcd78','mixed':'#aebbd0'}
+GROUP_COLORS = {'development':'#4caf50','entertainment':'#e53935','communication':'#2196f3','research':'#ff9800','system':'#9c27b0','mixed':'#9e9e9e'}
 DESKTOP_CATEGORIES = {'Development','Game','AudioVideo','Audio','Video','Chat','InstantMessaging','Email','Office','Education','Science','Graphics','System','Utility','WebBrowser'}
 
 
@@ -40,7 +88,7 @@ def grouping(value=None):
 
 def edit_group(group=None,color=None,app=None,rule=None):
     if group is not None and group not in GROUP_COLORS:raise ValueError('Choose a known group.')
-    if color is not None and(group is None or(color!='default'and not re.fullmatch(r'#[0-9a-fA-F]{6}',color))):raise ValueError('Use a six-digit hex color, such as #57dfff.')
+    if color is not None and(group is None or(color!='default'and not re.fullmatch(r'#[0-9a-fA-F]{6}',color))):raise ValueError('Use a six-digit hex color, such as #4caf50.')
     if app is not None and(not app or len(app)>96 or APP.sub('',app)!=app):raise ValueError('Choose a current public app identity.')
     if rule is not None and(rule not in GROUP_COLORS and rule!='auto'):raise ValueError('Choose a known app group or Automatic.')
     if (app is None)!=(rule is None)or(color is None and app is None):raise ValueError('Choose a group color or an app rule.')
@@ -257,6 +305,7 @@ def normalize(monitors, workspaces, clients, active, seeds, apps):
             app_class = APP.sub("", str(client.get("class", "")))[:96] or "Application"
             public = apps.get(app_class.casefold(), apps.get(app_class.casefold().removesuffix(".exe"), {}))
             windows.append({"address": address, "workspace": wid, "monitor": integer(client.get("monitor", -1)),
+                            "pid": client.get('pid') if type(client.get('pid')) is int and 0 < client['pid'] <= 2147483647 else None,
                             "app": public.get("app", app_class[:64]), "class": app_class,
                             "icon": public.get("icon", "application-x-executable"),"desktopCategories":public.get("categories",[]), "focused": address == focus,
                             "urgent": client.get("urgent") is True, "floating": client.get("floating") is True,
@@ -343,6 +392,7 @@ def watch():
     signature = None
     apps = {}
     stable_names = {}
+    cpu = OwnerCpuSampler()
     try:
         while True:
             current = app_directories_signature()
@@ -355,6 +405,7 @@ def watch():
                 result = {"ok": False, "error": "Desktop bridge unavailable. Refresh to reconnect."}
             if result.get('schema')==1:
                 now=time.monotonic();present=set()
+                cpu.sample(result.get('windows', []), now)
                 for district in result.get('districts',[]):
                     key=district['id'];present.add(key);entry=stable_names.get(key)
                     if district['nameSource']!='apps':stable_names.pop(key,None);continue
@@ -416,8 +467,68 @@ def relocate(address,destination,expected_app,expected_workspace):
     if not any(w.get('id')==destination for w in query('workspaces')):raise ValueError('That destination no longer exists. Refresh the city.')
     if destination==expected_workspace:raise ValueError('Choose another district.')
     args=[f'hl.dsp.window.move({{ workspace = "{destination}", window = "address:{address}", follow = false }})']if lua_supported()else['movetoworkspacesilent',f'{destination},address:{address}']
-    if command(['dispatch',*args]).strip()!='ok':raise RuntimeError('Compositor did not accept relocation.')
-    return {'ok':True,'workspace':destination}
+    try:
+        if command(['dispatch',*args]).strip()!='ok':
+            raise RuntimeError('Relocation not acknowledged.')
+    except (OSError, ValueError, TypeError, subprocess.SubprocessError, RuntimeError):
+        raise RuntimeError('Relocation outcome is unconfirmed. Refresh before another action.') from None
+    # A dispatch acknowledgement only accepts the request. Confirm its observed
+    # destination and original app/PID identity before claiming a successful move.
+    try:
+        after=query('clients')
+        if not isinstance(after,list):raise ValueError('Invalid relocation observation.')
+        matches=[c for c in after if isinstance(c,dict)and c.get('address')==address and c.get('mapped')is not False and c.get('hidden')is not True]
+        if len(matches)!=1:
+            raise ValueError('Relocation target is unavailable.')
+        moved=matches[0]
+        original_pid=client.get('pid') if type(client.get('pid'))is int and 0<client['pid']<=2147483647 else None
+        moved_pid=moved.get('pid') if type(moved.get('pid'))is int and 0<moved['pid']<=2147483647 else None
+        if (APP.sub('',str(moved.get('class','')))[:96]or'Application')!=expected_app or moved_pid!=original_pid or integer(moved.get('workspace',{}).get('id',-1),1)!=destination:
+            raise ValueError('Relocation target identity or destination changed.')
+    except (OSError, ValueError, TypeError, subprocess.SubprocessError, RuntimeError):
+        raise RuntimeError('Relocation outcome is unconfirmed. Refresh before another action.') from None
+    return {'ok':True,'workspace':destination,'sourceWorkspace':expected_workspace,'confirmed':True}
+
+
+def application_frame(action, maximized=False, fixture=False):
+    """Act only on this helper's parent shell's single Districts toplevel."""
+    title = 'Districts · Fixture' if fixture else 'Districts'
+    if not lua_supported():raise RuntimeError('Scoped application window actions require the Lua compositor API.')
+    parent = os.getppid()
+    def own():
+        matches=[c for c in query('clients') if c.get('pid')==parent and c.get('class')=='org.quickshell' and c.get('title')==title and c.get('mapped')is not False]
+        if len(matches)!=1:raise ValueError('Districts application window is not available.')
+        c=matches[0]
+        if not ADDRESS.fullmatch(str(c.get('address',''))):raise ValueError('Invalid application window address')
+        return c
+    if action=='configure':
+        for attempt in range(30):
+            try:c=own();break
+            except ValueError:
+                if attempt==29:raise
+                time.sleep(.05)
+    else:c=own()
+    address=c['address']
+    def dispatch(lua):
+        fresh=own()
+        if fresh['address']!=address:raise ValueError('Districts application window changed.')
+        if command(['dispatch',lua]).strip()!='ok':raise RuntimeError('Application window action was not accepted.')
+    current=bool(c.get('fullscreen',0))
+    if action=='configure'and not c.get('floating'):
+        dispatch(f'hl.dsp.window.float({{ action="set", window="address:{address}" }})')
+    if action=='raise':
+        dispatch(f'hl.dsp.focus({{ window="address:{address}" }})')
+        return {'ok':True,'maximized':current,'address':address}
+    desired=not current if action=='toggle'else maximized
+    if action!='state'and desired!=current:
+        mode=1 if desired else 0
+        dispatch(f'hl.dsp.window.fullscreen_state({{ internal={mode}, client={mode}, action="set", window="address:{address}" }})')
+    # The legacy maximize dispatcher has no safe per-window target, so it is not used.
+    for _ in range(20):
+        c=own()
+        if action=='state'or bool(c.get('fullscreen',0))==desired:break
+        time.sleep(.025)
+    return {'ok':True,'maximized':bool(c.get('fullscreen',0)),'address':address,'size':c.get('size'), 'floating':c.get('floating')}
 
 
 def main():
@@ -431,12 +542,14 @@ def main():
     meta=sub.add_parser("customize");meta.add_argument("workspace",type=int);meta.add_argument("--name");meta.add_argument("--pinned",choices=["true","false"]);meta.add_argument("--tint",type=int)
     move=sub.add_parser("relocate");move.add_argument("address");move.add_argument("destination",type=int);move.add_argument("--app",required=True);move.add_argument("--workspace",required=True,type=int)
     group=sub.add_parser('group');group.add_argument('--group',choices=list(GROUP_COLORS));group.add_argument('--color');group.add_argument('--app');group.add_argument('--rule',choices=[*GROUP_COLORS,'auto'])
+    frame=sub.add_parser('application-frame');frame.add_argument('operation',choices=['configure','toggle','state','raise']);frame.add_argument('--maximized',action='store_true');frame.add_argument('--fixture',action='store_true')
     args = parser.parse_args()
     try:
         if args.action == 'watch':
             watch(); return 0
         if args.action == "snapshot": result = snapshot()
         elif args.action == "group":result=edit_group(args.group,args.color,args.app,args.rule)
+        elif args.action == 'application-frame':result=application_frame(args.operation,args.maximized,args.fixture)
         elif args.action == "focus": result = activate(args.address, expected_app=args.app, expected_workspace=args.workspace)
         elif args.action == "visit": result = activate(workspace=args.workspace)
         elif args.action=="customize":result=customize(args.workspace,args.name,None if args.pinned is None else args.pinned=="true",args.tint)

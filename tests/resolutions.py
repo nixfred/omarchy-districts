@@ -39,5 +39,5 @@ with NativeSession('resolutions',qml)as session:
   if mode=='atlas':session.ipc('atlas');time.sleep(.2)
   path=OUT/('viewport-laptop-'+mode+'.png');path.unlink(missing_ok=True);session.ipc('capture',str(path),'1');session.marker('CAPTURE '+str(path)+' true',timeout=5)
  session.ipc('close');time.sleep(.1);assert not session.status()['opened'];session.quit();clean_log(session.log())
-records['limits']='Synthetic logical viewport and own-surface output scale on Vic; no real 4K/DPR/fractional monitor or Gus hardware was configured.'
+records['limits']='Synthetic logical viewport and own-surface output scaling; this fixture does not configure or verify a physical 4K or fractional-scale monitor.'
 (OUT/'resolutions.json').write_text(json.dumps(records,indent=2));print('PASS: seven native own-surface viewport captures, raster bound, laptop dialogs and cleanup.')

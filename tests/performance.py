@@ -36,6 +36,6 @@ with NativeSession('performance',qml)as session:
  done=session.status()
  assert not done['opened']and not done['collector']and done['frames']==closed['frames'],'Closed lifecycle advanced'
  session.quit();clean_log(session.log())
- records.update({'fixtureWindows':30,'resolution':'1920x1080','fpsCap':15,'rssKiB':rss,'sampleSeconds':durations,
+ records.update({'fixtureWindows':30,'resolution':reduced['viewportLogical'],'fpsCap':15,'rssKiB':rss,'sampleSeconds':durations,
                  'standalone':True,'normalExit':session.process.returncode==0,'animationStops':'PASS: frames unchanged reduced and closed','phaseStart':'Native READY marker; explicit scoped IPC phase changes'})
  (ROOT/'verification/performance.json').write_text(json.dumps(records,indent=2));print(json.dumps(records,indent=2))

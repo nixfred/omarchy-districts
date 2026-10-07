@@ -9,7 +9,7 @@ Item {
  property alias testHeading:heading
  property alias testFooter:footer
  readonly property bool sourceCurrent:!!city.moveDraft&&city.snapshot.windows.some(function(w){var d=modal.city.moveDraft;return w.address===d.address&&w.class===d.appClass&&w.workspace===d.sourceWorkspace})
- readonly property var entries:city.scene.districts.filter(function(d){return modal.city.moveDraft&&d.id!==modal.city.moveDraft.sourceWorkspace}).map(function(d){return {key:String(d.id),label:d.name,subtitle:"D"+d.id+" / "+d.count+(d.count===1?" window":" windows"),payload:d}})
+ readonly property var entries:city.scene.districts.filter(function(d){return !d.virtualWorkspace&&d.id>0&&modal.city.moveDraft&&d.id!==modal.city.moveDraft.sourceWorkspace}).map(function(d){return {key:String(d.id),label:d.name,subtitle:"D"+d.id+" / "+d.count+(d.count===1?" window":" windows"),payload:d}})
  visible:city.moveDraft!==null
  Rectangle{anchors.fill:parent;color:"#b0020712"}
  MouseArea{anchors.fill:parent;onClicked:modal.city.cancelMove()}

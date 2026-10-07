@@ -1,12 +1,12 @@
 .pragma library
 // Public app roles and explicit compositor workspace names only; no titles or URLs.
 var groups=[
- {key:'development',name:'Development',color:'#57dfff'},
- {key:'entertainment',name:'Entertainment',color:'#b99cff'},
- {key:'communication',name:'Communication',color:'#fc69d5'},
- {key:'research',name:'Research & Office',color:'#b0fca9'},
- {key:'system',name:'System & Tools',color:'#ffcd78'},
- {key:'mixed',name:'Mixed / Unclassified',color:'#aebbd0'}
+ {key:'development',name:'Development',color:'#4caf50'},
+ {key:'entertainment',name:'Entertainment',color:'#e53935'},
+ {key:'communication',name:'Communication',color:'#2196f3'},
+ {key:'research',name:'Research & Office',color:'#ff9800'},
+ {key:'system',name:'System & Tools',color:'#9c27b0'},
+ {key:'mixed',name:'Mixed / Unclassified',color:'#9e9e9e'}
 ]
 function info(key){return groups.find(function(g){return g.key===key})||groups[5]}
 function preferences(value){value=value||{};return {revision:Number(value.revision)||0,colors:value.colors||{},rules:value.rules||{}}}

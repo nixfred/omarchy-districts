@@ -20,19 +20,28 @@ PASSIVE_GUARD='''
 '''
 
 class NativeSession:
- def __init__(self,name,qml,*,live=False,guard=True):
-  self.name=name;self.qml=qml;self.live=live;self.guard=guard;self.process=None
+ def __init__(self,name,qml,*,live=False,guard=True,background=False):
+  self.name=name;self.qml=qml;self.live=live;self.guard=guard;self.background=background;self.process=None
  def __enter__(self):
   self.temporary=tempfile.TemporaryDirectory(prefix='districts-'+self.name+'-',dir='/tmp')
   self.work=Path(self.temporary.name)
   for name in ('Commons','Ui','services'):
    (self.work/name).symlink_to(Path(os.environ['OMARCHY_PATH'])/'shell'/name,target_is_directory=True)
   runtime=Path(os.environ.get('DISTRICTS_RUNTIME',str(ROOT)))
-  for name in ('DistrictsV2.qml','CityV2.js','CameraV2.js','NeonActionV2.qml','InspectorV2.qml','AtlasV2.qml','MoveV2.qml','PagedListV2.qml','GroupsV2.js','LegendV2.qml','districts.py','manifest.json'):shutil.copy2(runtime/'v2.2'/name if os.environ.get('DISTRICTS_RUNTIME')and(runtime/'v2.2'/name).exists()else runtime/name,self.work/name)
+  source=runtime/Path(json.loads((runtime/'manifest.json').read_text())['entryPoints']['barWidget']).parent if os.environ.get('DISTRICTS_RUNTIME') else runtime
+  for file in source.iterdir():
+   if file.suffix in ('.qml','.js','.py') or file.name=='manifest.json':shutil.copy2(file,self.work/file.name)
   self.config=self.work/'shell.qml'
   self.config.write_text(self.qml.replace('QA_GUARD',PASSIVE_GUARD if self.guard else ''))
   self.env={**os.environ,'QT_QPA_PLATFORM':'wayland','XDG_RUNTIME_DIR':f'/run/user/{os.getuid()}',
             'WAYLAND_DISPLAY':os.environ.get('WAYLAND_DISPLAY')or'wayland-1','XDG_STATE_HOME':str(self.work/'state')}
+  # Qt's WindowDoesNotAcceptFocus does not prevent Wayland compositor focus.
+  # A temporary, exact fixture-title rule keeps native QA out of the user's focus
+  # and tiled layout. Disable it in cleanup; never write compositor config files.
+  self.rule='districts_fixture_'+self.work.name.replace('-','_')
+  expression=self.rule+'=hl.window_rule({name="'+self.rule+'",match={class="^org\\\\.quickshell$",title="^Districts · Fixture$"},no_focus=true,float=true})'
+  if self.background:expression=expression[:-2]+',workspace="special:'+self.rule+' silent"})'
+  subprocess.run(['hyprctl','eval',expression],env=self.env,check=True,capture_output=True,text=True)
   if self.live and not self.env.get('HYPRLAND_INSTANCE_SIGNATURE'):
    candidates=[p for p in (Path(self.env['XDG_RUNTIME_DIR'])/'hypr').glob('*')if(p/'hyprland.lock').exists()]
    if candidates:self.env['HYPRLAND_INSTANCE_SIGNATURE']=max(candidates,key=lambda p:p.stat().st_mtime).name
@@ -68,9 +77,10 @@ class NativeSession:
    try:self.process.wait(timeout=3)
    except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
   self.logfile.close();self.temporary.cleanup()
+  subprocess.run(['hyprctl','eval',self.rule+':set_enabled(false);'+self.rule+'=nil'],env=self.env,check=True,capture_output=True,text=True)
   (ROOT/'verification'/(self.name+'-lifecycle.json')).write_text(json.dumps({
    'pid':self.process.pid,'exitCode':self.process.returncode,'elapsedSeconds':round(time.monotonic()-self.started,2),
-   'reaped':self.process.poll()is not None,'passiveGuard':self.guard},indent=2))
+   'reaped':self.process.poll()is not None,'passiveGuard':self.guard,'temporaryNoFocusRuleDisabled':True,'backgroundSpecialWorkspace':self.background},indent=2))
 
 def clean_log(log):
  for bad in ('ERROR:','ReferenceError','TypeError','Unable to assign','is not a type','FAIL!','Cannot specify','Binding loop'):

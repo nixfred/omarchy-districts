@@ -1,42 +1,88 @@
 {
-  "version": "2.2.0",
-  "status": "Complete tested release; installed activation is separate",
+  "schema": 1,
+  "version": "3.0.0",
+  "status": "Locally verified source candidate; publication and installation receipts are separate",
+  "verifiedSourceSnapshot": "63033968265c6795eeb7be1f588874c434a6b45c",
+  "runtimeGitTree": "b56c63d6af59b71cf9e082ac82610f3fdbb69769",
+  "runtimeFiles": 24,
+  "releaseFiles": 27,
   "runtimeHashes": {
-    "v2.2/DistrictsV2.qml": "0dae0ecb9b421742764424cd1db9bbf41455738b063039d3119272e5618d571d",
-    "v2.2/CityV2.js": "e4a12547e2fa7bc948b3ed41431efca78d67ef4222fb9052084ae43a6938b543",
-    "v2.2/CameraV2.js": "ba34c4d23c49aa26f46dbd548f519c619af32411159d0a715da8812e59d5f489",
-    "v2.2/NeonActionV2.qml": "403edafe7394a8e64db6abbb72f2fcc7991c14fc5c3b3c332f19242729e9b1c3",
-    "v2.2/InspectorV2.qml": "ba18d435172fd49d985fe2411904558eea4bdae589f5d8eae29c85bb07e5cb7c",
-    "v2.2/AtlasV2.qml": "dac20df3c40a052b689f2aa89304f7258d5fdc3af0da42b7f880da80a6d6722d",
-    "v2.2/MoveV2.qml": "82b439f99b967794a4578dff791d014f1fabdaf405d222c4bf58480202c8508d",
-    "v2.2/districts.py": "d393b75f989b78b64cfbc42223898f154cc8e7685b9074b36aa303cf044d09a9",
-    "v2.2/PagedListV2.qml": "110c85af07e0d24a5a123fbafe7a3a948381c52d06e0c34450601ba7ab169453",
-    "v2.2/GroupsV2.js": "296c42fecb0aaf0a840d4be74bd5e831f4c8812384de57df6e6ea692e32af182",
-    "v2.2/LegendV2.qml": "396b00217c3076a3956e54257a0ddb387a2f1e5db81bc65fe5128edcf3526f84",
-    "manifest.json": "5b7850e45b25327573a7c36c3fe35d656a7ccd20912533ccd7af9f42d667ec6b",
-    "README.md": "44b058f165dfe122493059bc6ca6a947ddee09e4d20bcfc9c06e92367ad1f227",
+    "v3.0.0/AgentCityV2.js": "598a380adae3d3910304494cb6bdfc80b766bc31a476e20ff3738964ecc86b69",
+    "v3.0.0/AgentV2.qml": "8057f6bb80d382104e39b613ebd442153eaf294e20f38154327df4d9b623f26f",
+    "v3.0.0/AtlasV2.qml": "dac20df3c40a052b689f2aa89304f7258d5fdc3af0da42b7f880da80a6d6722d",
+    "v3.0.0/CameraV2.js": "5df089b2d2d5c13237c2620d883ab9387e0e52a040fec543acee1c7a697d7797",
+    "v3.0.0/CityV2.js": "f766262d10cc7a9b370156ff00be4f87f6c38cb184e8f8e767f22ef02ddaf864",
+    "v3.0.0/DistrictsV2.qml": "e5fb8c31e00bf6644ae0d46e967c5e197735d596281adf43fb85966122e32ad5",
+    "v3.0.0/GroupsV2.js": "0c74313908a9787cdfcbcd4d287e0dd08f4456aa1b21937f0a59aaaaef5a01dc",
+    "v3.0.0/InspectorV2.qml": "e436b3a892d5b0c4bab156054b83fd6c9897bd1b0d2c195c65669bfb1ac3c4f8",
+    "v3.0.0/LegendV2.qml": "059b66b4f6d0ba3e2923cb0b13ed6ec0a1bc778310ff59ebbe6962ffe9de753f",
+    "v3.0.0/LensV2.js": "77150368d47816d026d0299e0aac4a8e050cfcb3019e006d9be9fd57c14f80f8",
+    "v3.0.0/LensV2.qml": "5f2297d3d7749adea7ad317088472013d30ba8a46fa597b4cee3f580b84fafae",
+    "v3.0.0/MoveV2.qml": "33b498bf41901a82b5b8535baddac8500b4a742be624f38faa02951d7fdc2001",
+    "v3.0.0/NavigationV2.js": "c230a7139f5688d34aaa273b8a3e860ff0c4f2c3cee6e0a6efb74be4ce560878",
+    "v3.0.0/NavigationV2.qml": "16c03e57f4e1c7d2457af770aa0e62336eb2eb90f32675f0a5bb1600461b3cf2",
+    "v3.0.0/NeonActionV2.qml": "403edafe7394a8e64db6abbb72f2fcc7991c14fc5c3b3c332f19242729e9b1c3",
+    "v3.0.0/OrganizeV2.qml": "8629af4202c661e4d9bd29f0c4e479245a97ca1f7564b8eef3599d1cc75a453f",
+    "v3.0.0/PagedListV2.qml": "110c85af07e0d24a5a123fbafe7a3a948381c52d06e0c34450601ba7ab169453",
+    "v3.0.0/ResourcesV2.js": "1feaea437f5eb0894ec677fdc2dbad3ae47d938b62e5e0a95d3d130ba56c03b2",
+    "v3.0.0/ResourcesV2.qml": "8a882e800302b48ec8883e1a3268c7eee95b28276556ddfebc321f8f510106b8",
+    "v3.0.0/districts.py": "443426924f772c5280df7449b90886df4f4f71594b0667bc2007b0566a19a1be",
+    "v3.0.0/history.py": "77abb7a1fa73b25486266d27ea1e1784af228646fa24a7c4d6e1f98e3c7ffc9e",
+    "v3.0.0/organize.py": "12840f97b86d5740adf5daf963355fcf3a25a9b4558dc8cdcac180809a7a9319",
+    "v3.0.0/resources.py": "dae63e8b40e1673adfda8c959261b624ab8e361659cecb83434f8929d0aa4d5a",
+    "v3.0.0/sessions.py": "b1c65f54652575f9cb456152d357dc996ba7da389e3bc4b6ba96fb38413c19ba",
+    "manifest.json": "f7c12fd50e8b8e429723c915e493a0fb67ed596bc2f4de15896135a584191e15",
+    "README.md": "7765af1385326089f3a22604e6ef43202d5921e942f69d470dcaea3ba24b7a07",
     "LICENSE": "94ca7ed57542f0e3d0bda127524390d008a850de3965df40cbd8997f39300099"
   },
   "checks": {
-    "bridge": 45,
-    "modelCameraClassificationCluster": true,
-    "max512DistrictGeometryAndFocusStability": true,
-    "nativePaginationEightLogicalViewports": true,
-    "nativeGroupLegendFiveLogicalViewports": true,
-    "nativeActionsMetadataCancelModal": true,
-    "nativeSevenViewportRasterCaptures": true,
-    "smallestLogical": [
-      912,
-      512
+    "portablePythonCases": 152,
+    "javascriptSuites": [
+      "model",
+      "camera",
+      "groups",
+      "activity",
+      "orbit",
+      "agents_city",
+      "navigation",
+      "lens"
     ],
-    "fullLabels": [
-      48,
-      64,
-      96
-    ]
+    "rootRuntimeByteParity": true,
+    "nativeSyntheticControls": true,
+    "nativeDraftBoundaryUnicodeCursorAndSessionIsolation": true,
+    "nativeProviderNoticePagination": true,
+    "nativeHistoricalRawSourceAndActionGuards": true,
+    "nativeSubmissionIdentityCapacityAndExactDraft": true,
+    "actualQtOrganizationJsonRoundTrips": 6,
+    "actualOwnFixtureOrganizationMoveWithUnrelatedClientsPreserved": true,
+    "nativeHiddenSingletonLifecycleAndActualResizes": [
+      [
+        912,
+        512
+      ],
+      [
+        1280,
+        800
+      ],
+      [
+        1500,
+        900
+      ]
+    ],
+    "syntheticNativeDocumentationCaptures": 6
   },
-  "kimi": "Live K3 audit complete; accepted fixes and adjudication in review/GROUPING-DECISIONS.md",
-  "limits": "Native tests use synthetic fixtures on Vic; large/fractional sizes are logical/offscreen own-surface captures; Gus hardware and real relocation remain untested.",
-  "publicNativeScreenshots": "Native Quickshell own-surface captures using synthetic public-app fixtures only",
-  "ci": "Portable state/model checks configured; native Wayland QA performed locally"
+  "review": {
+    "initialExternalModel": "grok-4.7-build",
+    "initialSourceSnapshot": "dfa2f204478b9493b5e74054c0d0fb542d930d1b",
+    "initialDisposition": "Blockers found, subsequently corrected and regression checked",
+    "correctedLocalDisposition": "No remaining concrete blocker identified in reviewed paths",
+    "correctedExternalReview": "Not performed"
+  },
+  "limits": [
+    "Native fixtures use synthetic data and exact temporary no-focus rules; they do not prove live visible user interaction.",
+    "No instruction was sent to an existing user session; real-provider queue delivery remains unverified.",
+    "Existing loaded Codex CLI sessions are supported; desktop Codex task attachment is unavailable through this adapter. Claude is read-only.",
+    "Repository evidence does not assert an installation, a physical monitor configuration or CI status for an unverified commit.",
+    "Replay retains bounded metadata observations in RAM and cannot recover tracking gaps or between-sample events."
+  ]
 }

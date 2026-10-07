@@ -16,7 +16,13 @@ jobs:
         with:
           node-version: '24'
       - run: python3 tools/check-project.py
-      - run: python3 -m unittest discover -s tests -p 'test_bridge.py'
-      - run: node tests/model.js
-      - run: node tests/camera.js
-      - run: node tests/groups.js
+      - run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Geometry, camera, grouping, activity, agents and navigation
+        run: |
+          for suite in model camera groups activity orbit agents_city navigation lens provider_legend; do
+            node "tests/$suite.js"
+          done
+      - name: Local recovery clock, rollover and DST
+        run: |
+          TZ=UTC node tests/provider_timezone.js
+          TZ=America/New_York node tests/provider_timezone.js

@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "id": "nixfred.districts",
   "name": "Districts",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "author": "Fred Nix",
   "license": "MIT",
-  "description": "Explore your real desktop as a living isometric city. Workspaces become districts; actual app windows become buildings, with safe navigation and persistent procedural architecture.",
+  "description": "Orbit your real desktop city, inspect actual session families and owner resources, and preview safe window organization.",
   "kinds": [
     "bar-widget"
   ],
   "entryPoints": {
-    "barWidget": "v2.2/DistrictsV2.qml"
+    "barWidget": "v3.0.0/DistrictsV2.qml"
   },
   "barWidget": {
     "displayName": "Districts",
@@ -20,7 +20,8 @@
     "defaults": {
       "motion": true,
       "night": true,
-      "edgePan": true
+      "edgePan": true,
+      "storedAgents": false
     },
     "schema": [
       {
@@ -40,6 +41,12 @@
         "type": "boolean",
         "label": "Edge glide",
         "defaultValue": true
+      },
+      {
+        "key": "storedAgents",
+        "type": "boolean",
+        "label": "Show stored agent sessions",
+        "defaultValue": false
       }
     ]
   }

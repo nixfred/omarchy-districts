@@ -1,79 +1,85 @@
 # Development
 
-This directory is the complete Districts source project. It can be copied or
-cloned to another location without the original development task directory.
-It uses Omarchy's installed shell imports at runtime; it does not depend on
-Mycelium or Infomarchy.
+This repository is the complete Districts project. It uses Omarchy’s shell imports at runtime and does not depend on an original task directory, Mycelium or Infomarchy. Quickshell loads QML/JavaScript; Python helpers use the standard library.
 
-## Source layout
+## Layout
 
 | Path | Purpose |
 | --- | --- |
-| `manifest.json` | Plugin identity and versioned entry point |
-| `v2.2/` | Production QML, JavaScript and Python runtime |
-| Root QML/JS/Python copies | Test harness inputs; keep identical to `v2.2/` |
-| `install.py` | Validated 14-file staging and optional scoped activation |
-| `tests/` | Portable bridge/model checks and native synthetic fixtures |
-| `docs/images/` | Original hero and sanitized native screenshots |
-| `tools/check-project.py` | Release completeness, runtime parity and local link checks |
+| `manifest.json` | Plugin identity, version and versioned entry point |
+| Versioned runtime directory | Installed QML, JavaScript and Python helpers |
+| Root runtime source copies | Native/portable fixture inputs; byte parity is required |
+| `install.py` | Validated staging, backup receipt and optional scoped activation |
+| `tests/` | Executable behavior checks and controlled native fixtures |
+| `docs/images/` | Illustrative hero and sanitized documentation images |
+| `tools/check-project.py` | Release completeness, runtime parity and local links |
+| `verification/RELEASE.json` | Sanitized evidence for a particular release |
 
-There is no compilation or bundle step: Quickshell loads the QML and
-JavaScript, and Python runs the bridge with its standard library. Python 3.10+
-and Node.js 18+ are sufficient for portable checks.
+Use the entry point in the manifest to determine the current runtime path. Update the validated installer file list and parity checks when adding runtime helpers. Keep source edits separate from the installed plugin.
 
 ## Portable checks
 
-Run from the project root:
+Python 3.10+ and Node.js 18+ are sufficient for portable checks; no Python package installation is needed. Run from the repository root:
 
 ```bash
 python3 tools/check-project.py
-python3 -m unittest discover -s tests -p 'test_bridge.py'
-node tests/model.js
-node tests/camera.js
-node tests/groups.js
+python3 -m unittest discover -s tests -p 'test_*.py'
+for check in tests/*.js; do node "$check"; done
 ```
 
-These checks use project-relative source paths and disposable fixture data.
-They do not need a live desktop. Root/runtime parity must pass before staging.
+Tests should exercise executable behavior, failures and side effects. Source-string matching alone does not establish that a feature works. Use fixture dependencies for process counters, compositor responses and session transports. Never send a real user instruction merely to prove that a button is wired.
+
+CI should run all relevant portable cases for the exact release commit. It does not replace native renderer, monitor-scale, focus or interaction verification.
 
 ## Native fixtures
 
-The native fixtures require Quickshell, QtTest, an awake Omarchy Wayland
-session and `OMARCHY_PATH` pointing to the Omarchy installation or checkout
-that provides `shell/Commons`, `shell/Ui` and `shell/services`.
+Native tests need an awake Omarchy Wayland session, Quickshell with QtTest support, and `OMARCHY_PATH` pointing to the installation or checkout supplying `shell/Commons`, `shell/Ui` and `shell/services`.
+
+Representative commands:
 
 ```bash
 python3 tests/grouping.py
 python3 tests/pagination.py
 python3 tests/interaction.py
+python3 tests/application.py
+python3 tests/activity_native.py
+python3 tests/resolutions.py
+python3 tests/performance.py
 ```
 
-These fixtures draw their own synthetic surfaces with keyboard focus disabled
-and pointer input excluded from the real desktop. Simulated control actions
-remain inside the fixture. They use temporary state and scoped child processes;
-they neither activate the plugin nor move real windows. Logs and captures go to
-ignored `verification/`. Use a copied source tree for a fresh verification run
-when preserving existing local evidence.
+Use synthetic metadata, temporary state and fixture-owned processes. Simulated actions remain in the fixture; real window moves and agent instructions must not be test substitutes. Fixture surfaces can be visible Wayland windows. Disabling keyboard focus and pointer input helps, but native maximize/map behavior still requires explicit compositor verification. Use an isolated hidden fixture workspace where necessary and record any temporary rule and its cleanup.
 
-`tests/activation_health.py` is a historical installation diagnostic, not a
-general checkout test. It expects the private `vic-v2-installation.json` receipt
-and its original backup. Those records are intentionally excluded from public
-source. `tests/live_bridge.py` inspects the actual desktop and should only be
-used for an explicitly requested live diagnostic. `tests/docs_capture.py`
-regenerates public image assets using six representative neighborhoods with short, sanitized names. Keep crowded stress fixtures and repeated long labels in private verification output; they are not showcase images. The capture script is not part of ordinary verification.
+Record logical viewport size separately from physical pixel dimensions and compositor scale. Include small/wide viewports, enlarged labels, light/dark themes, reduced motion, empty/disconnected/error states, modal pages and action results. Full 360° projection requires orientation-specific depth, visible-face, picking and label checks. Closed/minimized views must stop collection, tour/replay playback and animation.
 
-## Stage or install
+A fixture test, a live backend check and live visible interaction are distinct. Report which ran and what remains. Resource samples are short measurements of their specified workload, not machine-wide guarantees.
 
-See the [installation instructions](../README.md#install-on-an-existing-omarchy-desktop).
-For a non-live staging check, choose an empty temporary destination and an
-explicit receipt path:
+## Sessions and privacy
+
+The [session guide](SESSIONS.md) defines supported transport boundaries. Provider status must come from explicit records or API responses; CPU, process trees and inferred terminal contents cannot establish task progress or agent parentage. Metadata inventory must not preload reply text. Reply reads target one explicitly selected session.
+
+Session tests use mocked protocol peers and bounded public examples. An existing native client owns approvals. No test may lower permissions, resume a user session, create a competing process or inject terminal input. A queue response establishes queue acceptance only. Preserve a submission identity through uncertain outcomes and do not automatically resend.
+
+Replay tests must cover age/count/payload caps, observation gaps, missing objects, return-to-live behavior and action locks. Replay observations must omit private labels, paths, PIDs, replies and drafts, and must never enter action transports.
+
+## Documentation captures and review
+
+Capture public screenshots from the plugin’s native surface with controlled fixture data and public app names. Do not capture a live user desktop, private replies, credentials, local source paths or terminal text. Existing images can illustrate an earlier release only when clearly labeled; replace them with final-version fixtures before advertising new controls in screenshots.
+
+`tests/docs_capture.py` is a documentation tool, not an ordinary verification run. Crowded stress fixtures and repeated long labels belong in private verification output, not showcase images.
+
+Raw logs, captures, backups and independent-review prompts/responses stay outside public source or in ignored local directories. Publish only a truthful sanitized release/review summary bound to a full source commit and runtime digest. Historical review credits do not constitute a new release audit. Inspect tracked files before publication and verify remote CI for the exact pushed SHA.
+
+Historical installation diagnostics such as `tests/activation_health.py` may depend on private receipts from their original environment; they are not portable checkout tests. `tests/live_bridge.py` reads actual desktop metadata and belongs only in an explicitly requested live diagnostic.
+
+## Stage, activate and recover
+
+Follow the [installation guide](../README.md#install-on-an-existing-omarchy-desktop). To validate staging without enabling:
 
 ```bash
 python3 install.py --destination /tmp/districts-preview/nixfred.districts \
   --receipt /tmp/districts-preview/installation.json
 ```
 
-This copies and validates the runtime without enabling it. Live installation
-uses `python3 install.py --enable` from a normal desktop session. Keep the
-source checkout separate from the installed plugin directory. Retain private
-receipts, backups and historical runtime artifacts locally.
+Staging still requires Omarchy’s plugin validator. Live activation uses supported plugin discovery/enable APIs. A scoped rescan can recreate plugin components/services; it must not restart the entire shell. Account for shell API differences, retain current bar placement, and compare current live/disk config before and after activation.
+
+Keep the receipt and backup locally. Rollback closes Districts, restores its previous runtime and rescans. Restore saved configuration only after comparing it with the latest state so recovery cannot erase unrelated work.

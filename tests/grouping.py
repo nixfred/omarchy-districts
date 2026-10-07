@@ -82,7 +82,7 @@ with NativeSession('grouping',qml)as session:
  session.ipc('size','912','512');act('legend');act('next');assert report()['page']>0;act('backPage');assert report()['page']==0
  act('inspect');act('legend');act('editDev');act('color','#123456');act('saveColor');r=settled();assert r['prefs']['colors']=={'development':'#123456'},r
  assert all(d['color']=='#123456'for d in r['districts']if d['group']=='development');assert r['districts'][0]['circuitOverride'] and r['districts'][0]['tint']==0
- before=r['prefs'];act('color','#b99cff');act('saveColor');r=settled();assert r['prefs']==before and 'different color' in r['message'],r
+ before=r['prefs'];act('color','#e53935');act('saveColor');r=settled();assert r['prefs']==before and 'different color' in r['message'],r
  act('defaultColor');r=settled();assert not r['prefs']['colors'],r
  act('editCode');act('rule',2);r=settled();assert r['prefs']['rules']=={'code':'entertainment'},r
  assert all(d['group']=='entertainment'for d in r['districts']if d['id']in(1,7));assert r['topology']==topology

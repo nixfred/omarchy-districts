@@ -142,11 +142,35 @@ with m.architecture_lock(p):
             self.assertNotIn('PRIVATE',json.dumps(data))
     def test_relocation_validates_all_targets_and_is_silent(self):
         m,w,c,a=fixture();w.append({'id':3,'monitorID':0})
-        with patch.object(bridge,'query',side_effect=[c,w]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='ok')as cmd:
-            self.assertTrue(bridge.relocate('0x123',3,'kitty',2)['ok'])
+        with patch.object(bridge,'query',side_effect=[c,w,[{**c[0],'workspace':{'id':3}}]]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='ok')as cmd:
+            self.assertEqual(bridge.relocate('0x123',3,'kitty',2), {'ok':True,'workspace':3,'sourceWorkspace':2,'confirmed':True})
             cmd.assert_called_once_with(['dispatch','hl.dsp.window.move({ workspace = "3", window = "address:0x123", follow = false })'])
-        with patch.object(bridge,'query',side_effect=[c,w]),patch.object(bridge,'lua_supported',return_value=False),patch.object(bridge,'command',return_value='ok')as cmd:
+        with patch.object(bridge,'query',side_effect=[c,w,[{**c[0],'workspace':{'id':3}}]]),patch.object(bridge,'lua_supported',return_value=False),patch.object(bridge,'command',return_value='ok')as cmd:
             bridge.relocate('0x123',3,'kitty',2);cmd.assert_called_once_with(['dispatch','movetoworkspacesilent','3,address:0x123'])
+    def test_relocation_acknowledgement_is_not_move_confirmation(self):
+        m,w,c,a=fixture();w.append({'id':3,'monitorID':0})
+        original={**c[0],'pid':1234}; moved={**original,'workspace':{'id':3}}
+        for after in ([original],[],{},['invalid'],[{**moved,'class':'Code'}],[{**moved,'pid':5678}],[{**moved,'hidden':True}],[moved,moved]):
+            with self.subTest(after=after),patch.object(bridge,'query',side_effect=[[original],w,after]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='ok')as cmd:
+                with self.assertRaisesRegex(RuntimeError,'outcome is unconfirmed'):
+                    bridge.relocate('0x123',3,'kitty',2)
+                self.assertEqual(cmd.call_count,1)
+
+    def test_relocation_postquery_failure_and_dispatch_failure_are_unconfirmed(self):
+        m,w,c,a=fixture();w.append({'id':3,'monitorID':0})
+        with patch.object(bridge,'query',side_effect=[c,w,RuntimeError('Compositor unavailable')]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='ok')as cmd:
+            with self.assertRaisesRegex(RuntimeError,'outcome is unconfirmed'):
+                bridge.relocate('0x123',3,'kitty',2)
+            self.assertEqual(cmd.call_count,1)
+        with patch.object(bridge,'query',side_effect=[c,w]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='error')as cmd:
+            with self.assertRaisesRegex(RuntimeError,'outcome is unconfirmed'):
+                bridge.relocate('0x123',3,'kitty',2)
+            self.assertEqual(cmd.call_count,1)
+        with patch.object(bridge,'query',side_effect=[c,w]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',side_effect=subprocess.TimeoutExpired('dispatch',3))as cmd:
+            with self.assertRaisesRegex(RuntimeError,'outcome is unconfirmed'):
+                bridge.relocate('0x123',3,'kitty',2)
+            self.assertEqual(cmd.call_count,1)
+
     def test_relocation_stale_reused_missing_and_same_destination(self):
         m,w,c,a=fixture()
         cases=[([],w,'kitty',2,3), (c,w,'Code',2,3),(c,w,'kitty',4,3),(c,w,'kitty',2,3),(c,w,'kitty',2,2)]

@@ -49,7 +49,7 @@ Item {
     Text{width:parent.width;text:"All districts in this group inherit its color. Existing personal circuit accents stay preserved.";font.pixelSize:13;color:legend.city.ink;wrapMode:Text.Wrap}
     Row{width:parent.width;spacing:12
      Rectangle{width:44;height:44;radius:8;color:Groups.color(legend.groupKey,legend.city.groupingPreferences);border.color:legend.city.ink}
-     Controls.TextField{id:colorInput;width:parent.width-56;height:44;maximumLength:7;font.pixelSize:16;color:legend.city.ink;selectByMouse:true;placeholderText:"#57dfff";background:Rectangle{radius:7;color:Qt.alpha(legend.city.ink,.05);border.color:legend.city.accent}}
+     Controls.TextField{id:colorInput;width:parent.width-56;height:44;maximumLength:7;font.pixelSize:16;color:legend.city.ink;selectByMouse:true;placeholderText:"#4caf50";background:Rectangle{radius:7;color:Qt.alpha(legend.city.ink,.05);border.color:legend.city.accent}}
     }
     Row{width:parent.width;spacing:8
      NeonActionV2{id:colorSave;city:legend.city;width:(parent.width-8)/2;text:legend.city.groupingBusy?"Saving…":"Save group color";primary:true;enabled:!legend.city.groupingBusy;onClicked:legend.city.updateGrouping({group:legend.groupKey,color:colorInput.text})}

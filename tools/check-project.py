@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 manifest = json.loads((ROOT / 'manifest.json').read_text())
 assert manifest['id'] == 'nixfred.districts'
-assert manifest['version'] == '2.2.0'
+assert manifest['version'] == '3.0.0'
 for entry in manifest['entryPoints'].values():
     assert (ROOT / entry).is_file(), f'Missing entry point: {entry}'
 
@@ -18,11 +18,11 @@ installer = ast.parse((ROOT / 'install.py').read_text())
 runtime = next(ast.literal_eval(node.value) for node in installer.body
                if isinstance(node, ast.Assign)
                and any(isinstance(t, ast.Name) and t.id == 'RUNTIME' for t in node.targets))
-assert len(runtime) == 14
+assert len(runtime) == 33
 for name in runtime:
     path = ROOT / name
     assert path.is_file(), f'Missing release file: {name}'
-    if path.parent.name == 'v2.2':
+    if path.parent.name == 'v3.0.0':
         assert path.read_bytes() == (ROOT / path.name).read_bytes(), f'Root/runtime drift: {name}'
     if path.suffix == '.py':
         ast.parse(path.read_text(), filename=name)
@@ -39,6 +39,6 @@ for document in [ROOT / 'README.md', ROOT / 'docs/DEVELOPMENT.md']:
         assert (document.parent / link.split('#', 1)[0]).is_file(), f'Broken link: {link}'
 for asset in (ROOT / 'docs/images').glob('*.svg'):
     ET.parse(asset)
-assert len(list((ROOT / 'docs/images').glob('*.png'))) == 4
+assert len(list((ROOT / 'docs/images').glob('*.png'))) == 6
 assert 'MIT License' in (ROOT / 'LICENSE').read_text()
 print('PASS standalone release files, runtime parity, relative assets, SVG and source paths')

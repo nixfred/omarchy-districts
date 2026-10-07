@@ -6,134 +6,158 @@
   <img src="https://img.shields.io/badge/license-MIT-b99cff?labelColor=10182c" alt="MIT license">
 </p>
 
-**Districts turns your actual Omarchy desktop into a living isometric city.** Workspaces become neighborhoods. Real app windows become buildings. The city groups itself around what you do, with readable labels and a distinct color for each activity.
+**Your desktop, with a skyline.** Districts turns real Omarchy workspaces into neighborhoods and actual app windows into buildings. Explore the city, find a window, inspect its measured resources, or follow a supported local agent session.
 
-Click the skyline in your bar. Explore. Find an app. Enter its real window—or tidy its workspace with an explicit move. No account, cloud service, Infomarchy installation, or extra Python package is needed.
+Click the skyline in your bar to open or restore one native, resizable application. It has maximize/restore, minimize and close controls. The city uses your desktop theme, with readable panels and explicit pages instead of scrolling lists. No Districts account, cloud service, Infomarchy installation or extra Python package is required. Agent features use only locally available providers; Districts does not start one for you.
 
-![Native Districts city with six readable neighborhoods and activity groups](docs/images/city-native.png)
 
-*Actual Quickshell rendering with six representative neighborhoods and sanitized public-app names. Crowded stress fixtures and repeated long labels are kept out of showcase images. Every screenshot in this README is captured from the native plugin’s own surface; no private desktop contents were photographed.*
+![Native synthetic city fixture](docs/images/city-native.png)
 
-## A city that makes sense
+![Full-circle orbit fixture](docs/images/orbit-native.png)
 
-| Group | Default color | Evidence examples |
+Screenshots show public, synthetic app fixtures rendered by the native plugin. They contain no live desktop or agent conversation data.
+
+## Explore from any angle
+
+Orbit through a full **360°** and change the vertical tilt between **20° and 75°**. Buildings retain their real identity while the visible faces, drawing order and selection geometry follow the camera. District labels remain readable, and the minimap keeps navigation grounded. Pan, zoom, select a building, or return to **Overview**; reset the camera to its original orientation whenever you need it.
+
+**Viewpoints** saves up to twelve named camera views, including orientation and framing. Restore a view against the current city; a vanished district is never recreated. **Guided tour** visits neighborhoods actually present when you start it. Stop at any point, or take over by navigating yourself. Reduced motion uses immediate camera steps.
+
+Two ways to make a busy city easier to read:
+
+- **Focus Lens:** temporarily show one app, district, activity group or observed agent family. Counts explain what is shown. Clear the lens to return to the whole city. This changes the visualization only.
+- **Activity Replay:** inspect retained metadata observations since tracking began. Scrub or play changes in window membership and provider-reported agent status, then return to the latest live city. Historical views are marked and cannot dispatch window or agent actions.
+
+Replay is an observation buffer, not a recovered desktop history. It stays in RAM, retains at most thirty minutes, 120 frames and an estimated 512 KiB of serialized payload, and samples no faster than every two seconds. Short events between samples can be missed. Tracking gaps start a fresh baseline; historical CPU is unavailable. **Clear history** discards the buffer.
+
+## Neighborhoods that make sense
+
+| Activity | Default color | Public app evidence |
 | --- | --- | --- |
-| **Development** | Cyan | Code, Zed, known IDEs, public Development app categories |
-| **Entertainment** | Violet | Spotify, VLC, Steam, public game/media categories |
-| **Communication** | Pink | Slack, Discord, Signal, email and chat apps |
-| **Research & Office** | Green | Obsidian, Zotero, LibreOffice, public office/study categories |
-| **System & Tools** | Amber | Terminals, file managers and utilities when no clearer activity is present |
-| **Mixed / Unclassified** | Gray | Ties, empty workspaces and apps without enough activity evidence |
+| Development | Green | Editors, IDEs and development app categories |
+| Entertainment | Red | Media players and games |
+| Communication | Blue | Messaging, email and chat apps |
+| Research & Office | Orange | Notes, reference tools and office apps |
+| System & Tools | Purple | Terminals, file managers and utilities |
+| Mixed / Unclassified | Gray | Ties, empty districts or insufficient evidence |
 
-Distinct app identities vote once. A majority determines the activity; ties stay mixed. Generic browsers and system helpers do not outweigh a clearly identified activity app. An explicit compositor workspace name can supply a group when app roles provide no activity signal. Personal Districts names remain your labels.
+Distinct app identities vote once; ties stay mixed. Generic browsers do not outweigh a clearly identified activity app. Classification uses public compositor classes and allowlisted desktop-entry metadata, with a six-second settling period. Changing focus does not rearrange the city. Browser pages, URLs and other applications’ window titles are never used to guess what you are doing.
 
-**Browser pages, URLs and window titles are never inspected.** A browser may be work, a film or a game; Districts does not pretend to know. Automatic role changes settle for six seconds. Merely changing focus never rearranges the city.
+Open **Groups**, or click a group heading, to edit its color. Reusable app rules apply wherever an identity appears and remain editable after the app closes. **Automatic** restores detection. Personal district names, pins and circuit accents stay separate. Visual grouping preserves real workspace numbers and membership.
 
-Grouping is visual: **real workspace numbers and window membership stay unchanged**.
+## Find, inspect and organize
 
-## Change the grouping, once
+1. Open **Atlas** (`Ctrl K`), search a public app or district label, and inspect the result. **Enter app window** focuses that exact current window.
+2. Select a building to inspect its owner CPU, or open its resource details for resident/virtual memory, threads and bounded file-descriptor counts. Missing or inaccessible counters are labeled unavailable.
+3. Use **Move to district…** for one window, or **Organize** for a proposed consolidation plan. Review the public app identities and exact source/destination districts before pressing **Apply**.
 
-<p align="center"><img src="docs/images/legend-native.png" alt="Native group legend with six distinct colors and readable labels" width="470"></p>
+Organization protects named/pinned districts and focused windows, excludes unsupported entries, and proposes at most 32 moves. A preview expires after two minutes. Apply rechecks the actual desktop before each move; changed membership or identity blocks further action. Results distinguish confirmed, blocked, unconfirmed and unattempted moves. Cancel moves nothing. There is no automatic arrangement or blind undo.
 
-Open **Groups**, or click a city heading. Edit a color for the entire group. The legend keeps labels alongside color, shows actual district counts, and explains the selected district’s classification. Each group uses a different color. Your existing names, pins and personal circuit accents stay preserved.
+Warm facade lights reflect the measured **window-owner process CPU**. Sampling deduplicates shared owners, runs no more often than every 2.5 seconds and smooths brightness over six seconds. Percent is per CPU core. A terminal owner is its GUI process; a browser owner excludes renderer children. These counters do not report command progress, child CPU or agent completion. Slow measured brightness updates remain available with reduced motion.
 
-**Edit app grouping rules** changes a reusable rule wherever that public app identity appears. Choose **Automatic** to restore detection. Saved rules remain editable after an app closes; you never have to categorize districts one by one.
+## One Agent Desk for all sessions
 
-<p align="center"><img src="docs/images/rules-native.png" alt="Native app-rule editor: one reusable rule applies to every matching district" width="470"></p>
+Agent courts show real local provider session records. Parent/subagent links come from explicit stored spawn metadata; missing parentage and unavailable live status remain visible as limitations. Agent courts do not assert that a session owns an app window or belongs to a compositor workspace without evidence. Provider-reported states are labeled with their source, independently of CPU lights.
 
-## Three useful everyday flows
+Open **Agent Desk** from the global control, or select any agent building to open that exact session in the same desk. Its selector includes retained stored metadata even when stored courts are hidden in the city. Choose **Read latest reply** to fetch bounded assistant text and recent assistant history, then page through responses and text. Reads stay tied to the selected provider and session. Review that identity before queuing an instruction.
 
-1. **Find the app you meant to use.** Open **Atlas** (`Ctrl K`), search a public app or district label, and inspect the result. **Enter app window** then focuses that exact current window.
-2. **Follow an app across your desktop.** Inspect a building → **Tools** → **Trace this app**. The map highlights its actual windows across districts; inspect a result before entering it.
-3. **Put a misplaced window where it belongs.** Inspect → **Tools** → **Move to district…**. Choose an existing destination and confirm. The window moves while your current workspace stays put. **Cancel** makes no move.
+| Provider / surface | Current capability |
+| --- | --- |
+| Verified existing Codex CLI app-server session | Metadata, selected reply, and exact loaded-session instruction queue when the required API is available |
+| Codex desktop app namespace | Unsupported by this CLI adapter; it is not treated as the same transport |
+| Claude Code | Live list plus recorded stored subagents and selected bounded assistant history; owning main family is known, immediate spawning parent is unknown; no verified existing-process instruction transport |
+| Grok CLI | Stored sessions and explicitly recorded subagent links, selected bounded assistant history; live status and existing-process instruction transport are unavailable |
+| Pi / Kimi3 through Pi | Recorded session/model metadata and selected bounded assistant history; explicit `kimi-coding/k3` models appear as Kimi while retaining Pi transport identity; no verified existing-process bridge |
+| Other or disconnected providers | Explicit unavailable/unsupported state; no speculative attachment |
 
-The inspector has **Info**, **Style**, **Apps** and **Tools** views. Lists use **Back / Next** pages with complete wrapped labels, so data stays readable without scrolling. Map dragging and zooming remain deliberate city navigation.
+Districts never resumes a session to create a competing process, injects terminal keystrokes, starts a daemon, answers approval requests or changes permissions. Codex queue acknowledgement means **queued**, not executed or completed. Existing approvals and questions stay in the native client. An uncertain submission is not resent automatically. The [session guide](docs/SESSIONS.md) explains these boundaries.
 
-<p align="center"><img src="docs/images/passport-native.png" alt="Native app passport with readable public identity and an explicit Enter app window action" width="300"></p>
+## Provider allowance and pace
+
+**Providers** shows Grok, Claude, Codex and Kimi identity markers, observed session states and a filter shared by the city and Agent Desk. Quota rows require an available, stamped source. Districts reads plain local quota metadata and Codex’s existing daemon read-only quota API; it has no Infomarchy or Burn Bar runtime dependency.
+
+The priority headline is signed **BANKED TIME / HOW FAR BEHIND**: pace-equivalent allowance credit from a verified fixed-duration window. It is not guaranteed compute time. Usage, remaining allowance and reset are secondary. Behind pace shows an estimated wait **assuming no additional usage**, plus the desktop’s local date, time and timezone offset at recovery. This recovery estimate is separate from a rate-limit reset or permission to make requests. Unknown rolling windows, missing timestamps, stale snapshots and unavailable provider data stay explicit. With several windows, the most behind usable window leads; each window remains inspectable.
+
+The [quota evidence guide](docs/provider-metric-matrix.md) documents units, freshness, the formula, sources and limitations.
 
 ## Install on an existing Omarchy desktop
 
-Requires a working Omarchy Quickshell desktop, Hyprland and Python 3.10+. The plugin uses Python’s standard library. Run these commands in your normal desktop session:
+Requires a working Omarchy Quickshell desktop, Hyprland 0.56+ with its scoped Lua dispatch API, and Python 3.10+. Run from your normal desktop session:
 
 ```bash
-git clone https://github.com/nixfred/omarchy-districts.git ~/Projects/omarchy.districts.plugin
-cd ~/Projects/omarchy.districts.plugin
+git clone https://github.com/nixfred/omarchy-districts.git ~/Projects/omarchy-districts
+cd ~/Projects/omarchy-districts
 python3 install.py --enable
 ```
 
-The installer validates and copies the release into `~/.config/omarchy/plugins/nixfred.districts`, backs up its previous runtime, and uses Omarchy’s supported plugin rescan/enable APIs. An existing bar placement and unrelated settings are preserved. A new installation appends the skyline to the right section. It does not restart your shared shell.
+The installer validates the release and stages a separate runtime under `~/.config/omarchy/plugins/nixfred.districts`. Its receipt records file hashes and the backup location. Scoped discovery/activation uses Omarchy’s plugin APIs; it does not restart the whole shell. A rescan may recreate plugin components and services. Existing placement and unrelated settings must be preserved during an update.
 
-**Updating an existing checkout:** close Districts first, preserve any local source edits, then:
+Automatic activation verifies both live and saved settings. If the shell explicitly reports that its optional persistence-status API is absent, the installer checks matching live and saved configuration instead; other persistence errors stop activation. To stage separately and use supported scoped discovery:
+
+```bash
+python3 install.py
+omarchy-shell shell rescanPlugins
+# New installation only; retain existing placement on updates:
+omarchy plugin enable nixfred.districts --section right
+```
+
+**Update:** close Districts, preserve local source edits, fast-forward the checkout and reinstall. Do not reset a dirty checkout or overwrite unrelated local changes.
 
 ```bash
 omarchy-shell nixfred.districts close
-git -C ~/Projects/omarchy.districts.plugin pull --ff-only
-python3 ~/Projects/omarchy.districts.plugin/install.py --enable
+git -C ~/Projects/omarchy-districts pull --ff-only
+python3 ~/Projects/omarchy-districts/install.py --enable
 ```
 
-To stage without changing the live desktop:
+For a staging check without live activation:
 
 ```bash
 python3 install.py --destination /tmp/districts-preview/nixfred.districts \
   --receipt /tmp/districts-preview/installation.json
 ```
 
-Disable with `omarchy plugin disable nixfred.districts`. The full source remains in your project directory; installed runtime files are a separate copy.
+Disable with `omarchy plugin disable nixfred.districts`. To roll back, close Districts, restore only its previous plugin directory from the receipt’s backup, then rescan. Compare the latest configuration before restoring any saved settings: a backup must not erase later unrelated changes.
 
-## Controls
+## Controls and preferences
 
 | Control | Action |
 | --- | --- |
-| Drag / pointer near a map edge | Pan / gentle edge glide |
+| Drag / edge glide | Pan the city |
+| Orbit and tilt controls | Rotate the view / change elevation |
 | Wheel, `+`, `−` | Zoom around the pointer / map center |
 | Minimap | Travel across the city |
-| Click / double-click | Select / fly closer to inspect |
-| `F` / Overview | Fit the city |
+| Click / double-click | Select / frame a building or district |
+| `F`, Home / Overview | Fit the current city |
 | `Tab`, `Shift Tab` | Select app buildings |
 | `Ctrl K` / Atlas | Find a district or app |
 | Atlas `↑ ↓`, `PgUp PgDn` | Select a result / change page |
-| `Enter` | Inspect an atlas result; enter the selected app/workspace from the city |
+| `Enter` | Inspect an Atlas result or visit the live selection |
 | `N` | Name the selected district |
 | `R` | Refresh |
-| `Esc` / Leave | Cancel the current modal or leave the city |
+| `Esc` | Dismiss the current panel or close the city |
 
-**Style** preserves a personal name, pin and circuit. Leaving a name blank restores the observed name. The ellipsis menu includes day/night, reduced motion and edge-glide settings.
+Day/night, reduced motion and edge glide are explicit preferences. Closing or minimizing stops city collection and animation; the bar restores the singleton application. Saved architecture preferences and camera viewpoints persist locally with mode `0600`. Replay is never persisted.
 
-## Privacy, performance and limits
+## Privacy and verification
 
-- No titles, thumbnails, terminal text, file contents, URLs, transcripts or private screenshots are collected. Public app identity comes from compositor class and allowlisted desktop-entry metadata.
-- Procedural seeds, your explicit names/pins/circuits, group colors and chosen app-identity rules persist in `$XDG_STATE_HOME/districts/architecture.json` (mode `0600`). Automatic classifications and transient window addresses stay in memory. Up to 128 manual app rules are supported.
-- Navigation revalidates a window’s address, app class and workspace. Relocation requires a fresh existing destination and an explicit confirmation. Failure never reopens the city to steal focus.
-- Ambient animation is capped at 15 fps, camera navigation at 30 fps. Reduced motion and closed views stop animation; closed views stop collection. A visible active city has a debounced collector and a 2.5-second recovery poll.
-- Snapshots are bounded at 512 windows and 512 ordinary workspaces. Special/scratchpad windows are excluded. The map raster is capped at six million physical pixels. Decorative civic buildings are architecture, not invented app telemetry.
-- Native layouts are checked down to **912 × 512 logical pixels**, including full 48-character district labels, 64-character app labels and 96-character public identities. Larger and fractional output captures are synthetic viewport checks on Vic, not a claim of testing every physical monitor or Gus.
+The ordinary city collector uses title-free window metadata and measured owner counters. Agent inventory contains identifiers, explicit family relationships and reported state; chat text is fetched only for the selected session on request. Selected replies and drafts stay out of replay. No screenshots, browser URLs, command lines or transcript contents are used for classification or resource lighting, and no external telemetry is added by Districts.
 
-A 30-window native fixture measured about **1.25% of one CPU core** with ambient motion and **0% while reduced or closed** during short samples. This is a measured fixture, not a hardware-wide performance guarantee.
+Window actions revalidate live identity and membership. Resource inspection verifies the owner before and after reading counters, including process start time to detect PID reuse. Historical views cannot enter, move, organize or instruct anything. Ordinary city snapshots are bounded at 512 windows/workspaces; the map raster is capped at six million physical pixels. Decorative buildings are architecture, not invented app telemetry.
 
-## Development and checks
+Portable checks, native synthetic fixtures, live installed checks and independent source review provide different evidence. A passing CI badge is evidence for its linked commit; fixture captures do not establish behavior on every physical monitor. Checks and their limits are recorded in [verification/RELEASE.json](verification/RELEASE.json) and the [review record](review/README.md).
 
-Runtime source is in `v2.2/`; root copies support the local test harness. Keep them byte-identical when changing runtime code. `install.py` copies only the validated 14-file release, not test logs, private desktop backups or review infrastructure.
+## Development
 
-No compilation or bundle step is needed. The [development guide](docs/DEVELOPMENT.md) describes the standalone layout, dependencies and historical diagnostics. Portable checks need Python and Node, with no Python package installation:
+No build or bundling step is needed. The versioned runtime directory is named by `manifest.json`; root source copies support the fixtures and must remain byte-identical. The installer copies only the validated runtime and release documents.
 
 ```bash
 python3 tools/check-project.py
-python3 -m unittest discover -s tests -p 'test_bridge.py'
-node tests/model.js
-node tests/camera.js
-node tests/groups.js
+python3 -m unittest discover -s tests -p 'test_*.py'
+for check in tests/*.js; do node "$check"; done
 ```
 
-Native checks require an awake Omarchy Wayland session with Quickshell’s QtTest support and `OMARCHY_PATH` pointing to your Omarchy checkout:
+Native checks require Omarchy, Wayland, Quickshell and QtTest. See the [development guide](docs/DEVELOPMENT.md) for environment requirements, fixture scope and controlled screenshot capture.
 
-```bash
-python3 tests/grouping.py
-python3 tests/pagination.py
-python3 tests/interaction.py
-python3 tests/resolutions.py
-python3 tests/performance.py
-```
+MIT licensed, © 2026 Fred Nix. Built for Omarchy and Quickshell; standalone from Infomarchy. Original source and historical review credits are retained in the repository history and [review record](review/README.md).
 
-These use synthetic fixtures, temporary state and their own scoped processes. They never dispatch real window moves or restore an old desktop layout. The 2.2 release passed 45 bridge/state checks, classification and 512-district geometry checks, native grouping/page/action checks, viewport captures, and a live independent Kimi K3 source audit with verified fixes.
-
-MIT licensed. Built for Omarchy; standalone from Infomarchy.
+The multi-provider extension is tracked separately in [extension verification](verification/EXTENSION.json). The earlier [release record](verification/RELEASE.json) covers its named frozen snapshot only. The extension record identifies the subsequent external source review, finding dispositions and validated runtime.
