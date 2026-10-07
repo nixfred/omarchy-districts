@@ -85,8 +85,8 @@ The [quota evidence guide](docs/provider-metric-matrix.md) documents units, fres
 Requires a working Omarchy Quickshell desktop, Hyprland 0.56+ with its scoped Lua dispatch API, and Python 3.10+. Run from your normal desktop session:
 
 ```bash
-git clone https://github.com/nixfred/omarchy-districts.git ~/Projects/omarchy-districts
-cd ~/Projects/omarchy-districts
+git clone https://github.com/nixfred/omarchy-districts.git ~/Projects/omarchy.districts.plugin
+cd ~/Projects/omarchy.districts.plugin
 python3 install.py --enable
 ```
 
@@ -105,8 +105,8 @@ omarchy plugin enable nixfred.districts --section right
 
 ```bash
 omarchy-shell nixfred.districts close
-git -C ~/Projects/omarchy-districts pull --ff-only
-python3 ~/Projects/omarchy-districts/install.py --enable
+git -C ~/Projects/omarchy.districts.plugin pull --ff-only
+python3 ~/Projects/omarchy.districts.plugin/install.py --enable
 ```
 
 For a staging check without live activation:
@@ -145,6 +145,10 @@ The ordinary city collector uses title-free window metadata and measured owner c
 Window actions revalidate live identity and membership. Resource inspection verifies the owner before and after reading counters, including process start time to detect PID reuse. Historical views cannot enter, move, organize or instruct anything. Ordinary city snapshots are bounded at 512 windows/workspaces; the map raster is capped at six million physical pixels. Decorative buildings are architecture, not invented app telemetry.
 
 Portable checks, native synthetic fixtures, live installed checks and independent source review provide different evidence. A passing CI badge is evidence for its linked commit; fixture captures do not establish behavior on every physical monitor. Checks and their limits are recorded in [verification/RELEASE.json](verification/RELEASE.json) and the [review record](review/README.md).
+
+## Requirements and remaining acceptance
+
+The [project TODO](TODO.md) maps recovered requirements to implementation, recorded tests and remaining acceptance. Built features, partial provider support and installed behavior are distinguished. Source synchronization does not upgrade the installed plugin.
 
 ## Development
 
