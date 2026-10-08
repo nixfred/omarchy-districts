@@ -64,16 +64,18 @@ def agreed_config():
   raise RuntimeError('Live and saved desktop configuration disagree; inspect current state before retrying.')
  return live
 
-def settled_config():
- # The runtime swap hot-reloads the plugin inside the shell; its IPC can refuse
- # one call mid-reload. Retry transport failures only; any disagreement or
- # change still stops activation.
+def settled(read):
+ # The runtime swap and rescan hot-reload plugins inside the shell; its IPC can
+ # refuse a call mid-reload. Retry transport failures only; any disagreement,
+ # ambiguity or change in what is read still stops activation.
  deadline=time.monotonic()+8
  while True:
-  try:return agreed_config()
+  try:return read()
   except subprocess.SubprocessError:
    if time.monotonic()>=deadline:raise
    time.sleep(.25)
+
+def settled_config():return settled(agreed_config)
 
 def unchanged_config(before, phase, has_state_api=False):
  if has_state_api:
@@ -152,7 +154,7 @@ def main():
    # Registry rescans finish asynchronously; do not restart the shell.
    deadline=time.monotonic()+8;entry=None
    while time.monotonic()<deadline:
-    entry=catalog_entry()
+    entry=settled(catalog_entry)
     if entry is not None:break
     time.sleep(.15)
    else:raise RuntimeError('Plugin discovery did not complete; runtime is installed but not enabled.')
@@ -174,7 +176,7 @@ def main():
     raise RuntimeError('New Districts placement differs from the requested append position; inspect current state.')
    if without_ours(before)!=without_ours(after):
     raise RuntimeError('Unrelated configuration changed; inspect newest live state without restoring a backup.')
-   active=catalog_entry()
+   active=settled(catalog_entry)
    if active is None or active.get('enabled') is not True or ID in after.get('disabledPlugins',[]) or len(placements(after))!=1:
     raise RuntimeError('Districts enablement could not be verified; inspect current plugin state.')
    if agreed_config()!=after:raise RuntimeError('Configuration changed during final enablement readback; inspect current state.')

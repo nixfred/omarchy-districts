@@ -37,7 +37,10 @@ class Desktop:
    if self.reloading:
     self.reloading-=1;raise subprocess.CalledProcessError(1,cmd,stderr='plugin reloading\n')
    return json.dumps(self.config)
-  if method=='listPlugins':return json.dumps([{'id':ID,'enabled':bool(installer.placements(self.config))}])
+  if method=='listPlugins':
+   if self.reloading:
+    self.reloading-=1;raise subprocess.CalledProcessError(1,cmd,stderr='plugin reloading\n')
+   return json.dumps([{'id':ID,'enabled':bool(installer.placements(self.config))}])
   raise AssertionError('Unsupported test IPC: '+method)
  def run(self,cmd,**kwargs):
   self.calls.append(list(cmd))
@@ -127,6 +130,11 @@ class InstallTests(unittest.TestCase):
   desktop.on_stage=reload
   self.assertEqual(self.invoke(desktop),0);data=self.receipt_data()
   self.assertTrue(data['enabled']);self.assertNotIn('activationError',data);self.assertEqual(desktop.reloading,0)
+ def test_reload_transport_blip_during_discovery_is_retried(self):
+  desktop=self.desktop(placed=True);self.previous()
+  def rescan():desktop.reloading=2
+  desktop.on_rescan=rescan
+  self.assertEqual(self.invoke(desktop),0);self.assertTrue(self.receipt_data()['enabled']);self.assertEqual(desktop.reloading,0)
  def test_persistent_transport_failure_after_swap_still_stops(self):
   desktop=self.desktop(placed=True);self.previous()
   def reload():desktop.reloading=10**6
