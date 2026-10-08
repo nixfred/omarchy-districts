@@ -39,6 +39,6 @@ for document in [ROOT / 'README.md', ROOT / 'docs/DEVELOPMENT.md']:
         assert (document.parent / link.split('#', 1)[0]).is_file(), f'Broken link: {link}'
 for asset in (ROOT / 'docs/images').glob('*.svg'):
     ET.parse(asset)
-assert len(list((ROOT / 'docs/images').glob('*.png'))) == 6
+assert len(list((ROOT / 'docs/images').glob('*.png'))) == 8
 assert 'MIT License' in (ROOT / 'LICENSE').read_text()
 print('PASS standalone release files, runtime parity, relative assets, SVG and source paths')

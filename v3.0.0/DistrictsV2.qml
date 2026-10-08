@@ -98,6 +98,7 @@ Item {
   property alias testAgent:agentPane
   property alias testDeskButton:deskButton
   property alias testProvidersButton:providersButton
+  property alias testPaceDock:paceDock
   property alias testProviderPane:providerPane
   property alias testStoredAgents:storedAgentsAction
 

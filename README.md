@@ -63,6 +63,8 @@ Agent courts show real local provider session records, labeled with each session
 
 Agent buildings glow with their **reported workflow state**: cyan and a pulsing roof beacon while working, amber with a faster beacon when a session reports it is blocked or waiting on approval or input, a steady low cyan when idle, and dim grey for stored or unreported sessions. The beacon holds still under reduced motion, and a stored record never glows as live work. Select an agent court to **Collapse family to root** or expand it again; the Desk still lists every member.
 
+![Agent courts with real session names, reported-state glow and the quota pace dock (synthetic fixture)](docs/images/agents-native.png)
+
 Open **Agent Desk** from the global control, or select any agent building to open that exact session in the same desk. Its selector includes retained stored metadata even when stored courts are hidden in the city. Choose **Read latest reply** to fetch bounded assistant text and recent assistant history, then page through responses and text. Reads stay tied to the selected provider and session. Review that identity before queuing an instruction.
 
 | Provider / surface | Current capability |
@@ -79,6 +81,8 @@ Districts never resumes a session to create a competing process, injects termina
 ## Provider allowance and pace
 
 The **quota pace dock** sits beside the city at all times (toggle **Pace dock**, or `×` on the dock). Each provider with a measured window gets one card: **BANKED**, **ON PACE** or **BEHIND** with the amount first, then how long until you are back on pace and the local clock time when that happens. Providers without a supported quota source share one plain "quota unavailable" line. Click a card to filter the city and Desk by provider; **Details** opens the full legend. On narrow windows the dock shrinks to a 140-pixel strip rather than scrolling.
+
+<p align="center"><img src="docs/images/pace-native.png" alt="Quota pace dock: BEHIND with wait and local return time, BANKED, unavailable providers (synthetic fixture)" width="240"></p>
 
 **Providers** shows Grok, Claude, Codex and Kimi identity markers, observed session states and a filter shared by the city and Agent Desk. Quota rows require an available, stamped source. Districts reads plain local quota metadata and Codex’s existing daemon read-only quota API; it has no Infomarchy or Burn Bar runtime dependency.
 
