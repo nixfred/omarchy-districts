@@ -4,7 +4,7 @@ Audit date: 2026-10-07. This is the canonical project requirement tracker, recov
 
 ## Source and installation status
 
-- **Existing reference installation:** local 2.2.3 build. Its installed status is separate from this repository; the source reconciliation does not upgrade either machine's plugin.
+- **Installed 2026-10-07:** 3.0.0 on **gus** (source d820609, runtime identical at 3bb5012) and **vic** (3bb5012), each built from its own `~/Projects/omarchy.districts.plugin` checkout with `install.py --enable` after green CI on the exact commit. Both receipts: 34 runtime files, `enabled: true`, `preservation: PASS` (existing right-section bar slot and unrelated settings unchanged), pre-install backups under `~/.local/state/districts/backups/`. `tests/activation_health.py` passes on both (hashes, closed-frame stability, collector/camera/edge stopped, grounded live names, no new shell errors). No whole-shell restart. Previously installed: gus 2.2.3-gus.1, vic 2.2.0.
 - **Validated runtime:** 3.0.0, release snapshot `c1924fb9883713822951274ece4069664224231c`, runtime tree `3ae7fa45fa96b7996d1e12192551ea3c8f9e8add`. The 33-file installer release has 30 matching root/versioned runtime pairs. Recorded checks include 230 Python cases, nine JavaScript suites, 13 Agent Desk Qt cases, four Provider Legend Qt cases and integrated native synthetic fixtures. These do not establish installed 3.0 acceptance.
 - **Documentation reconciliation:** this revision adapts the separate requirement audit for public source. The runtime, manifest, tests and earlier source-bound verification records remain unchanged. Existing verification receipts describe their named source snapshots, not a newly installed runtime or an assumed remote CI pass.
 - **Canonical source directory:** `~/Projects/omarchy.districts.plugin` on both development machines. Private historical branches and source evidence remain local. Actual GitHub publication, per-machine branch tracking and installed versions are checked independently; copying a local Git bundle is not a public push/pull.
@@ -153,8 +153,8 @@ Public evidence: [extension record](verification/EXTENSION.json) binds runtime h
 - [x] Thirty-obligation conversation audit incorporated. Keep stable D-IDs and add new evidence/acceptance without treating assistant proposals or fixture results as user acceptance.
 - [x] Resolve D-02 side placement, D-12 agent state glow and D-15 real names (2026-10-07 completion pass; Fred's visual acceptance still open).
 - [ ] Record per-provider live/read/send/parentage/quota coverage honestly; keep unsupported rows open.
-- [ ] Verify actual publication and CI for the exact reconciled commit through the authorized source workflow.
-- [ ] After exact published source and CI are verified, back up and install using supported scoped activation; verify 33 runtime files, plugin version/load and preservation.
+- [x] Verify actual publication and CI for the exact reconciled commit (origin/main 5e8ff75, d820609, 3bb5012: GitHub Actions success each).
+- [x] Back up and install using supported scoped activation; verify 34 runtime files, plugin version/load and preservation (gus and vic, 2026-10-07).
 - [ ] Perform installed monitor/no-scroll/lifecycle and supported real-session acceptance in a coordinated slot. Fixture QA and live visible QA must remain distinct.
 - [ ] Have the user accept views/tour and the specific two surprise designs; retain the precise feature limits.
 
