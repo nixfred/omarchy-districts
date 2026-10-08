@@ -64,12 +64,23 @@ def agreed_config():
   raise RuntimeError('Live and saved desktop configuration disagree; inspect current state before retrying.')
  return live
 
+def settled_config():
+ # The runtime swap hot-reloads the plugin inside the shell; its IPC can refuse
+ # one call mid-reload. Retry transport failures only; any disagreement or
+ # change still stops activation.
+ deadline=time.monotonic()+8
+ while True:
+  try:return agreed_config()
+  except subprocess.SubprocessError:
+   if time.monotonic()>=deadline:raise
+   time.sleep(.25)
+
 def unchanged_config(before, phase, has_state_api=False):
  if has_state_api:
   state=persistence_state()
   if state is None:raise RuntimeError('Desktop persistence API changed during activation.')
   require_ready(state)
- if agreed_config()!=before:
+ if settled_config()!=before:
   raise RuntimeError('Configuration changed '+phase+'; runtime staged but activation stopped. Inspect current state without restoring a backup.')
 
 def catalog_entry():

@@ -18,7 +18,7 @@ class Desktop:
  def __init__(self,home,config,modern=False):
   self.home=home;self.config=deepcopy(config);self.modern=modern;self.calls=[]
   self.state={'ready':True,'saving':False,'error':''};self.api_error=None
-  self.on_stage=None;self.on_rescan=None;self.on_enable=None;self.pending_save=False
+  self.on_stage=None;self.on_rescan=None;self.on_enable=None;self.pending_save=False;self.reloading=0
   self.now=0;self.write()
  def write(self):
   path=self.home/'.config/omarchy/shell.json';path.parent.mkdir(parents=True,exist_ok=True)
@@ -33,7 +33,10 @@ class Desktop:
    if self.api_error:raise self.api_error
    if not self.modern:raise subprocess.CalledProcessError(1,cmd,stderr='Function not found.\n')
    return json.dumps(self.state)
-  if method=='listShellConfig':return json.dumps(self.config)
+  if method=='listShellConfig':
+   if self.reloading:
+    self.reloading-=1;raise subprocess.CalledProcessError(1,cmd,stderr='plugin reloading\n')
+   return json.dumps(self.config)
   if method=='listPlugins':return json.dumps([{'id':ID,'enabled':bool(installer.placements(self.config))}])
   raise AssertionError('Unsupported test IPC: '+method)
  def run(self,cmd,**kwargs):
@@ -118,6 +121,17 @@ class InstallTests(unittest.TestCase):
   desktop=self.desktop();(self.home/'.config/omarchy/shell.json').write_text('{}');self.previous()
   with self.assertRaisesRegex(RuntimeError,'disagree'):self.invoke(desktop)
   self.assertEqual((self.dest/'runtime.qml').read_text(),'previous-runtime\n');self.assertEqual(desktop.enables(),[])
+ def test_reload_transport_blip_after_swap_is_retried_not_fatal(self):
+  desktop=self.desktop(placed=True);self.previous()
+  def reload():desktop.reloading=2
+  desktop.on_stage=reload
+  self.assertEqual(self.invoke(desktop),0);data=self.receipt_data()
+  self.assertTrue(data['enabled']);self.assertNotIn('activationError',data);self.assertEqual(desktop.reloading,0)
+ def test_persistent_transport_failure_after_swap_still_stops(self):
+  desktop=self.desktop(placed=True);self.previous()
+  def reload():desktop.reloading=10**6
+  desktop.on_stage=reload
+  self.assertEqual(self.invoke(desktop),1);self.assertIn('activationError',self.receipt_data());self.assertEqual(desktop.enables(),[])
  def test_concurrent_staging_change_stops_before_rescan_without_restoration(self):
   desktop=self.desktop()
   def changed():desktop.config['idle']['keep']=99;desktop.write()
