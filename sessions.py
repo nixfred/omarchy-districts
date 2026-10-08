@@ -35,6 +35,36 @@ def stamp():
     return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
 
 
+# Provider-recorded session names (user-set titles, generated titles, agent
+# nicknames). Single-line, control/bidi characters removed, bounded. Never a
+# message body: callers pass only explicit name/title metadata fields.
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f​-‏‪-‮⁦-⁩]')
+NAME_LIMIT = 64
+
+
+def display_name(value):
+    if not isinstance(value, str):
+        return None
+    text = ' '.join(CONTROL.sub(' ', value).split())
+    return text[:NAME_LIMIT] or None
+
+
+def name_fields(*candidates):
+    """First non-empty (value, source) pair becomes the session's real name."""
+    for value, source in candidates:
+        text = display_name(value)
+        if text:
+            return {'name': text, 'nameSource': source}
+    return {'name': None, 'nameSource': None}
+
+
+def project_name(cwd):
+    """Working-directory basename only; the full path stays private."""
+    if not isinstance(cwd, str) or not cwd.strip():
+        return None
+    return display_name(os.path.basename(cwd.rstrip('/')) or None)
+
+
 class CodexRpcError(RuntimeError):
     """Expose only numeric protocol code, never provider response contents."""
     def __init__(self, code, message=""):
@@ -182,9 +212,15 @@ def codex_record(thread, loaded=False):
     pending = bool((thread.get('status') or {}).get('activeFlags')) if isinstance(thread.get('status'), dict) else True
     live = loaded and status['type'] != 'notLoaded'
     direct = live and status['type'] in ('idle', 'active') and thread.get('canAcceptDirectInput') is True
+    nickname = thread.get('agentNickname')
+    if isinstance(nickname, str) and isinstance(thread.get('agentRole'), str) and thread['agentRole'].strip():
+        nickname = nickname + ' (' + thread['agentRole'] + ')'
+    names = name_fields((thread.get('name'), 'Codex thread name'),
+                        (nickname, 'Codex agent nickname'))
     return {'id': sid, 'provider': 'codex', 'key': 'agent:codex:' + sid,
             'parentId': parent, 'familyId': ident(thread.get('sessionId', sid)),
-            'label': 'Codex CLI ' + sid[:8], 'status': status,
+            'label': names['name'] or 'Codex CLI ' + sid[:8], **names,
+            'project': project_name(thread.get('cwd')), 'status': status,
             'statusSource': 'Codex CLI daemon thread/read', 'observedAt': stamp(),
             'availability': 'live' if live else 'stored', 'sessionScope': 'local-cli-daemon',
             'capabilities': {'canReadReply': True, 'canReadHistory': True, 'canSend': direct and not pending,
@@ -238,6 +274,7 @@ def codex_inventory(connection, notices=None):
             except (RuntimeError, ValueError):
                 rows[sid] = {'id': sid, 'provider': 'codex', 'key': 'agent:codex:' + sid,
                     'parentId': None, 'familyId': sid, 'label': 'Codex CLI ' + sid[:8],
+                    'name': None, 'nameSource': None, 'project': None,
                     'status': {'type': 'notLoaded', 'activeFlags': []},
                     'statusSource': 'Codex CLI stored spawn record; live status unavailable',
                     'observedAt': stamp(), 'availability': 'stored',
@@ -324,9 +361,13 @@ def claude_inventory(runner=subprocess.run, notices=None):
             sid = ident(item.get('sessionId'))
         except ValueError:
             continue
+        names = name_fields((item.get('name'), 'Claude agents --json name'))
+        # Interactive sessions report `status`; background agents report `state`.
+        state = item.get('status') or item.get('state') or 'unknown'
         rows.append({'id': sid, 'provider': 'claude', 'key': 'agent:claude:' + sid,
-                     'parentId': None, 'familyId': sid, 'label': 'Claude ' + sid[:8],
-                     'status': {'type': str(item.get('state', 'unknown'))[:32], 'activeFlags': []},
+                     'parentId': None, 'familyId': sid, 'label': names['name'] or 'Claude ' + sid[:8], **names,
+                     'project': project_name(item.get('cwd')), 'kind': str(item.get('kind') or '')[:16] or None,
+                     'status': {'type': str(state)[:32], 'activeFlags': []},
                      'statusSource': 'Claude agents --json', 'observedAt': stamp(), 'availability': 'live',
                      'capabilities': {'canReadReply': True, 'canReadHistory': True, 'canSend': False, 'canOpen': False,
                                       'approvalPolicy': 'existing-session-unchanged', 'approvalPending': None,
@@ -418,7 +459,7 @@ def inventory(connection_factory=CodexConnection, extra_factories=None):
             'unsupportedProviders': unsupported, 'notices': notices,
             'bounded': bounded or aggregate_bound or any('bound' in n['code'] or 'truncated' in n['code'] for n in notices),
             'observedAt': stamp(), 'scope': 'local-provider-session-records',
-            'privacy': 'Metadata inventory omits titles, prompts, replies, paths, and PID guesses.'}
+            'privacy': 'Metadata inventory includes provider-recorded session names (explicit name/title metadata only) and working-directory basenames; it omits prompts, message bodies, replies, full paths and PID guesses.'}
 
 
 def metrics(connection_factory=CodexConnection, collector=None, now_ms=None):

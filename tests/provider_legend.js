@@ -29,3 +29,16 @@ assert.equal(p.activity([Object.assign({},live,{observedAt:now-900001})], 'codex
 assert.equal(p.activity([Object.assign({},live,{statusSource:''})], 'codex',now),'Workflow state unavailable');
 const long='Full source '.repeat(20),rows=p.splitRows([{label:'Source',value:long}]);assert.equal(rows.map(r=>r.value).join(''),long);assert(rows.every(r=>Array.from(r.value).length<=68));
 console.log('PASS signed sourced pace, explicit unknown/stale, conditional pacing wait, provider filters and full paginated metadata.');
+// Side dock: state word first, wait and local clock separate, unavailable/stale never shown as on pace.
+{
+ const records=[{provider:'claude',metric:metric(-5400)},{provider:'codex',metric:metric(5400)},{provider:'grok',metric:Object.assign(metric(0),{freshness:'stale'})}];
+ const d=p.dock(records,[],now),byId=Object.fromEntries(d.cards.map(c=>[c.id,c]));
+ assert.equal(d.cards.length,2);assert.equal(byId.claude.state,'BEHIND');assert.equal(byId.claude.amount,'1h 30m');
+ assert.equal(byId.claude.wait,'Back on pace in 1h 30m');assert(byId.claude.clock.startsWith('≈ ')&&byId.claude.clock.endsWith(' local'));
+ assert.equal(byId.codex.state,'BANKED');assert.equal(byId.codex.wait,'No pause needed');assert.equal(byId.codex.clock,'');
+ assert(d.note.includes('Grok: stale'));assert(d.note.includes('Kimi: quota unavailable'));assert(!d.note.includes('Claude'));
+ assert.equal(p.dock([{provider:'codex',metric:metric(0)}],[],now).cards[0].state,'ON PACE');
+ assert.equal(p.dock([],[],now).cards.length,0);assert(p.dock([],[],now).note.includes('Grok, Claude, Codex, Kimi: quota unavailable'));
+ assert.equal(p.shortClock(now+3600000,now).includes(' '),true);assert.equal(p.shortClock(null,now),null);
+ console.log('PASS side dock: BANKED/ON PACE/BEHIND headline, wait and local clock separate, stale/unavailable explicit.');
+}

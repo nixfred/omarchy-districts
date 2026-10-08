@@ -9,7 +9,10 @@ from pathlib import Path
 import re
 import stat
 import time
+from urllib.parse import unquote
 
+NAME_LIMIT = 64
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069]')
 UUID = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
 LIMIT = 128
 MAX_CANDIDATES = 512
@@ -22,6 +25,13 @@ MAX_HISTORY_LINE = 1024 * 1024
 MAX_MESSAGES = 16
 MAX_TEXT = 65536
 SOURCE = 'Selected Grok chat_history.jsonl assistant text (stored; live completion unverified)'
+
+
+def display_name(value):
+    if not isinstance(value, str):
+        return None
+    text = ' '.join(CONTROL.sub(' ', value).split())
+    return text[:NAME_LIMIT] or None
 
 
 def ident(value):
@@ -122,9 +132,23 @@ def summary(store, directory, directory_fd=None):
     info = value.get('info')
     if not isinstance(info, dict) or ident(info.get('id')) != ident(directory[-1]):
         raise ValueError('Grok summary identity does not match its directory.')
-    # Title, cwd, restored-session parent, model prompts and message counts are
-    # deliberately ignored. Restoring a session does not prove subagent ancestry.
-    return {'id': ident(info['id']), 'directory': directory}
+    # Restored-session parent, model prompts and message counts are ignored:
+    # restoring a session does not prove subagent ancestry. Explicit title and
+    # agent-name metadata supply the real session name; cwd only its basename.
+    name, source = None, None
+    for field, label in (('generated_title', 'Grok generated session title'), ('agent_name', 'Grok agent name')):
+        name = display_name(value.get(field))
+        if name:
+            source = label
+            break
+    cwd = directory[1] if len(directory) > 1 else None
+    project = None
+    if isinstance(cwd, str):
+        try:
+            project = display_name(os.path.basename(unquote(cwd).rstrip('/')))
+        except (ValueError, UnicodeError):
+            project = None
+    return {'id': ident(info['id']), 'directory': directory, 'name': name, 'nameSource': source, 'project': project}
 
 
 def scan(home=None, notices=None):
@@ -247,7 +271,8 @@ def inventory(home=None, notices=None):
         except (OSError, ValueError):
             pass
         row = {'id': sid, 'provider': 'grok', 'key': 'agent:grok:' + sid,
-               'parentId': parent, 'familyId': sid, 'isSubagent': bool(parent), 'label': 'Grok ' + sid[:8],
+               'parentId': parent, 'familyId': sid, 'isSubagent': bool(parent), 'label': item.get('name') or 'Grok ' + sid[:8],
+               'name': item.get('name'), 'nameSource': item.get('nameSource'), 'project': item.get('project'),
                'status': {'type': 'unknown', 'activeFlags': []}, 'availability': 'stored',
                'statusSource': 'Grok summary metadata; live process ownership unverified',
                'sessionScope': 'grok-local-stored', 'observedAt': stamp(),

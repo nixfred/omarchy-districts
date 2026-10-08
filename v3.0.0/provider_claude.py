@@ -16,6 +16,54 @@ LIMIT = 128
 TAIL_BYTES = 2 * 1024 * 1024
 TEXT_LIMIT = 65536
 HISTORY_LIMIT = 16
+TITLE_TAIL_BYTES = 65536
+NAME_LIMIT = 64
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069]')
+# Explicit session-title metadata records, strongest first. Message bodies are
+# never parsed for naming.
+TITLE_TYPES = ((b'"custom-title"', 'custom-title', 'customTitle', 'Claude custom session title'),
+               (b'"agent-name"', 'agent-name', 'agentName', 'Claude session agent name'),
+               (b'"ai-title"', 'ai-title', 'aiTitle', 'Claude generated session title'))
+
+
+def display_name(value):
+    if not isinstance(value, str):
+        return None
+    text = ' '.join(CONTROL.sub(' ', value).split())
+    return text[:NAME_LIMIT] or None
+
+
+def stored_title(path, root, sid):
+    """Latest title metadata within a bounded transcript tail, or (None, None)."""
+    try:
+        with safe_open(path, root) as stream:
+            size = os.fstat(stream.fileno()).st_size
+            start = max(0, size - TITLE_TAIL_BYTES)
+            stream.seek(start)
+            if start:
+                stream.readline(TITLE_TAIL_BYTES)
+            data = stream.read(TITLE_TAIL_BYTES)
+    except (OSError, ValueError):
+        return None, None
+    found = {}
+    for line in reversed(data.split(b'\n')):
+        for marker, kind, field, source in TITLE_TYPES:
+            if kind in found or marker not in line:
+                continue
+            try:
+                item = json.loads(line)
+            except (ValueError, UnicodeError, RecursionError):
+                continue
+            if isinstance(item, dict) and item.get('type') == kind and item.get('sessionId') == sid:
+                text = display_name(item.get(field))
+                if text:
+                    found[kind] = (text, source)
+        if len(found) == len(TITLE_TYPES):
+            break
+    for _, kind, _, _ in TITLE_TYPES:
+        if kind in found:
+            return found[kind]
+    return None, None
 
 
 def identity(value):
@@ -92,8 +140,9 @@ def subagent_inventory(existing=(), home=None, notices=None):
     if root.is_symlink() or not root.is_dir():
         return []
     live = {r['id']: r for r in existing if r.get('provider') == 'claude'}
-    # Directory traversal is bounded separately; no body, name, prompt or role
-    # is loaded for automatic inventory. Sidecar presence confirms native records.
+    # Directory traversal is bounded separately; no message body or prompt is
+    # loaded for automatic inventory. Sidecar presence confirms native records;
+    # its agentType/description and stored title records supply real names.
     candidates = []
     scanned = 0
     scan_bound = False
@@ -137,33 +186,42 @@ def subagent_inventory(existing=(), home=None, notices=None):
                     meta = json.loads(raw)
                     if meta.get('agentType', '').lower() in ('compact', 'compaction'):
                         continue
+                    agent_type = display_name(meta.get('agentType'))
+                    description = display_name(meta.get('description'))
+                    child_name = (agent_type + ': ' + description)[:NAME_LIMIT] if agent_type and description else description or agent_type
                 except (OSError, ValueError, AttributeError, RecursionError):
                     continue
-                candidates.append((session.name.lower() in live, sidecar.stat().st_mtime, session.name.lower(), agent, project))
+                candidates.append((session.name.lower() in live, sidecar.stat().st_mtime, session.name.lower(), agent, project, child_name))
             if scan_bound:
                 break
         if scan_bound:
             break
     candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
     rows = {}
-    for _, _, sid, agent, project in candidates:
+    for _, _, sid, agent, project, child_name in candidates:
         if len(rows) >= LIMIT - 1:
             scan_bound = True
             break
         if sid not in live and sid not in rows:
-            rows[sid] = record(sid, sid, None, safe_file(project / (sid + '.jsonl'), root))
+            transcript = project / (sid + '.jsonl')
+            readable = safe_file(transcript, root)
+            title, source = stored_title(transcript, root, sid) if readable else (None, None)
+            rows[sid] = record(sid, sid, None, readable, title, source)
         child = sid + ':' + agent
-        rows[child] = record(child, sid, None, True)
+        rows[child] = record(child, sid, None, True, child_name, 'Claude subagent sidecar agentType/description' if child_name else None)
     if scan_bound and notices is not None:
         notices.append({'provider': 'claude', 'code': 'inventory-bound-reached', 'reason': 'Stored Claude subagent metadata reached its scan or 128-record bound; some recorded children or parents may be omitted.'})
     return list(rows.values())
 
 
-def record(value, sid, parent, readable):
+def record(value, sid, parent, readable, name=None, name_source=None):
+    fallback = 'Claude subagent ' + value.split(':')[-1][:8] if ':' in value else 'Claude stored ' + sid[:8]
+    name = display_name(name)
     return {'id': value, 'provider': 'claude', 'key': 'agent:claude:' + value,
             'parentId': parent, 'parentSource': 'Native owning-main-session family; immediate spawning parent unavailable' if ':' in value else None,
             'isSubagent': ':' in value,
-            'familyId': sid, 'label': 'Claude subagent ' + value.split(':')[-1][:8] if ':' in value else 'Claude stored ' + sid[:8],
+            'name': name, 'nameSource': name_source if name else None,
+            'familyId': sid, 'label': name or fallback,
             'status': {'type': 'unknown', 'activeFlags': []},
             'statusSource': 'Stored Claude subagent record; running state and completion unverified' if ':' in value else 'Stored Claude parent identity; running state unverified',
             'observedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'availability': 'stored',

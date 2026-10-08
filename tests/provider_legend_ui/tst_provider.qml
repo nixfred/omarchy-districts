@@ -5,6 +5,8 @@ Item {
  width:912;height:512
  QtObject{id:theme;property color panelPaper:"#171717";property color ink:"#eeeeee";property color accent:"#80cfff"}
  Districts.ProviderLegendV2{id:pane;city:theme;width:560;height:460;liveClock:false;nowMs:1791328800000;agents:[{provider:"grok"},{provider:"claude"},{provider:"codex"},{provider:"pi",isKimi3:true}]}
+ Districts.PaceDockV2{id:dock;city:theme;x:640;y:0;maxHeight:400;nowMs:1791328800000;agents:[]}
+ SignalSpy{id:dockSpy;target:dock;signalName:"providerSelected"}
  SignalSpy{id:filterSpy;target:pane;signalName:"providerSelected"}
  SignalSpy{id:clearSpy;target:pane;signalName:"cleared"}
  TestCase {
@@ -18,6 +20,18 @@ Item {
    for(var i=0;i<item.children.length;i++)fit(item.children[i],root)
   }
   function pages(){for(var page=0;page<pane.pageCount;page++){pane.detailPage=page;wait(5);fit(pane,pane);verify(pane.testRows.mapToItem(pane,0,0).y+pane.testRows.height<=pane.testFooter.y-4,"detail content stays above footer")}}
+  function test_side_dock_fits_every_height_without_scroll(){
+   var all=[{provider:"grok",metric:metric(-5400)},{provider:"claude",metric:metric(-120)},{provider:"codex",metric:metric(5400)},{provider:"kimi",metric:metric(0)}]
+   for(var h of [400,318,250,200,120]){dock.maxHeight=h;dock.records=all;wait(20);verify(dock.height<=h+.1,"dock within "+h+": "+dock.height);fit(dock,dock)
+    if(h>=200)compare(dock.testCards.count,4);else{verify(dock.testCards.count<4);verify(dock.testNote.text.indexOf("Kimi ON PACE")>=0,"folded cards stay readable: "+dock.testNote.text)}
+    for(var i=0;i<dock.testCards.count;i++){var card=dock.testCards.itemAt(i);verify(card.y+card.height<=dock.height,"card "+i+" inside dock at "+h)}}
+   dock.mini=true;dock.maxHeight=318;wait(20);compare(dock.width,140);compare(dock.testCards.count,4);verify(dock.height<=318);fit(dock,dock);dock.mini=false
+   dock.maxHeight=400;wait(10);verify(dock.detail===2,"full detail when there is room")
+   var behind=dock.testCards.itemAt(0);verify(behind.modelData.state==="BEHIND");verify(behind.modelData.clock.indexOf("local")>0)
+   dock.records=[{provider:"codex",metric:metric(5400)}];wait(20);compare(dock.testCards.count,1);verify(dock.testNote.text.indexOf("quota unavailable")>=0);fit(dock,dock)
+   mouseClick(dock.testCards.itemAt(0),40,20);compare(dockSpy.count,1);compare(dockSpy.signalArguments[0][0],"codex")
+   dock.activeProvider="codex";mouseClick(dock.testCards.itemAt(0),40,20);compare(dockSpy.signalArguments[1][0],"")
+  }
   function test_all_source_states_fit(){
    for(var width of [560,900]){pane.width=width;for(var seconds of [5400,-5400,0]){var m=metric(seconds);pane.records=[{provider:"codex",metric:m,windows:[m]}];pane.detailPage=0;wait(30);pages()}}
    pane.width=560;pane.records=[];wait(30);pages();verify(pane.testHeadline.text.includes("unavailable"));var stale=metric(5400);stale.freshness="stale";pane.records=[{provider:"codex",metric:stale,windows:[stale]}];wait(30);pages();verify(pane.testHeadline.text.includes("stale"))

@@ -22,7 +22,7 @@ ShellRoot{
   function size(w:string,h:string):void{d.testViewport=Qt.size(Number(w),Number(h));d.fit()}
   function capture(path:string):void{d.capture(path,1)}
   function act(name:string,arg:string):void{switch(name){
-   case "groupHeader":d.fit();var g=d.scene.groups[0],p=City.project(g.x,g.y);qa.mouseClick(d.testMap,d.testMap.width/2+d.panX+p.x*d.zoom,d.testMap.height/2+d.panY+p.y*d.zoom-8);break
+   case "groupHeader":d.fit();qa.wait(700);d.zoom=Math.max(d.zoom,.5);var g=d.scene.groups[0],p=City.groupLabel(d.scene,g,d.orbitCamera,d.zoom);d.panX=-p.x*d.zoom;d.panY=-p.y*d.zoom;d.paint();qa.wait(50);qa.mouseClick(d.testMap,d.testMap.width/2,d.testMap.height/2-5);break
    case "escape":d.testBody.forceActiveFocus();qa.keyClick(Qt.Key_Escape);break
    case "legend":d.openLegend();break
    case "closeLegend":d.closeLegend();break

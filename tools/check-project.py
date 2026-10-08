@@ -18,7 +18,7 @@ installer = ast.parse((ROOT / 'install.py').read_text())
 runtime = next(ast.literal_eval(node.value) for node in installer.body
                if isinstance(node, ast.Assign)
                and any(isinstance(t, ast.Name) and t.id == 'RUNTIME' for t in node.targets))
-assert len(runtime) == 33
+assert len(runtime) == 34
 for name in runtime:
     path = ROOT / name
     assert path.is_file(), f'Missing release file: {name}'

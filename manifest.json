@@ -21,7 +21,8 @@
       "motion": true,
       "night": true,
       "edgePan": true,
-      "storedAgents": false
+      "storedAgents": false,
+      "paceDock": true
     },
     "schema": [
       {
@@ -47,6 +48,12 @@
         "type": "boolean",
         "label": "Show stored agent sessions",
         "defaultValue": false
+      },
+      {
+        "key": "paceDock",
+        "type": "boolean",
+        "label": "Quota pace dock beside the city",
+        "defaultValue": true
       }
     ]
   }

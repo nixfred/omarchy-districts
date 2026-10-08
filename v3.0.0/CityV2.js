@@ -92,7 +92,7 @@ function updateActivity(scene,windows) {
   var owners={};(windows||[]).forEach(function(w){owners[w.address]=w})
   scene.buildings.forEach(function(b){var w=owners[b.key];if(w){b.ownerPid=w.pid;b.ownerCpu=w.ownerCpu||{state:'unavailable'};b.illumination=lampBrightness(b.ownerCpu)}})
 }
-function activityName(snapshot,id){var names=[];(snapshot.windows||[]).forEach(function(w){if(w.workspace===id&&names.indexOf(w.app)<0)names.push(w.app)});names.sort();return names.length?names.slice(0,3).join(' + ').slice(0,48):'Workspace '+id}
+function activityName(snapshot,id){var names=[];(snapshot.windows||[]).forEach(function(w){if(w.workspace===id&&names.indexOf(w.app)<0)names.push(w.app)});names.sort();return names.length?names.slice(0,3).join(' + ').slice(0,48):'Empty district'}
 function layout(snapshot) {
   var boroughs=snapshot.boroughs||[],districts=snapshot.districts||[],windows=snapshot.windows||[]
   var monitorIds=boroughs.map(function(m){return m.id}),positions={}
@@ -247,7 +247,10 @@ function building(ctx,b,palette,selected,time,scale,lens,camera) {
   var s=b.size/2,h=b.height*(b.growth===undefined?1:b.growth),p=function(x,y,z){return markedProject(ctx,b.x+x,b.y+y,z,camera)},faces=buildingFaces(b,camera),sides=faces.filter(function(f){return f.name!=='roof'})
   var active=b.focused||b.key===selected
   var light=b.circuitOverride?palette.neons[b.tint||0]:(b.groupColor||palette.accent)
+  // Agent facades take the colour of their reported workflow state.
+  if(b.kind==='agent'&&b.agentGlow&&b.agentGlow.color)light=b.agentGlow.color
   var subdued=lens&&b.appClass!==lens;if(subdued)ctx.globalAlpha=.20
+  else if(b.kind==='agent'&&b.agentGlow&&b.agentGlow.state==='dormant')ctx.globalAlpha=.62
   // The geometry rises and folds; windows retain their app identity throughout a move.
   polygon(ctx,[p(-s,-s,0),p(s,-s,0),p(s+10,s+8,0),p(-s+10,s+8,0)],'rgba(0,0,0,.18)')
   if(active)polygon(ctx,[p(-s-9,-s-9,1),p(s+9,-s-9,1),p(s+9,s+9,1),p(-s-9,s+9,1)],color(palette.accent,.15),color(palette.accent,.5),1)
@@ -266,7 +269,7 @@ function building(ctx,b,palette,selected,time,scale,lens,camera) {
   } else if(b.style===2)polygon(ctx,[p(-s*.65,-s*.65,h+6),p(s*.65,-s*.65,h+6),p(s*.65,s*.65,h+6),p(-s*.65,s*.65,h+6)],color(light,.16),color(light,.55),.7)
   // Neon facade band and public app sign; actual window identities only.
   sides.forEach(function(f){var sign=f.name==='east'||f.name==='south'?1:-1,a=f.name==='east'||f.name==='west'?p(sign*(s+.5),-s,h*.72):p(-s,sign*(s+.5),h*.72),q=f.name==='east'||f.name==='west'?p(sign*(s+.5),s,h*.72):p(s,sign*(s+.5),h*.72);line(ctx,a,q,color(light,.8),2)})
-  if(scale>.85){var sign=p(0,0,h+6);ctx.font='600 '+Math.max(1,Math.round(10/scale))+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(light,.92);ctx.fillText(b.app.slice(0,8).toUpperCase(),sign.x,sign.y)}
+  if(scale>.85){var sign=p(0,0,h+6);ctx.font='600 '+Math.max(1,Math.round(10/scale))+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(light,.92);ctx.fillText((b.sign||b.app.slice(0,8)).toUpperCase(),sign.x,sign.y)}
   if(b.style===0){polygon(ctx,[p(-s*.5,-s*.5,h),p(s*.5,-s*.5,h),p(s*.5,s*.5,h+14),p(-s*.5,s*.5,h+14)],palette.roof,color(light,.7),1)}
   if(active) {
     var top=p(0,0,h+14),pulse=1
@@ -308,7 +311,7 @@ function draw(ctx,scene,palette,selected,districtSelected,time,motion,scale,view
     landmark(ctx,d,p,palette)
     }
     ctx.font='500 '+Math.max(1,Math.round(13/scale))+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(palette.ink,.9);var label=districtLabel(d,camera,scale);if(scale>.26||d.id===districtSelected)ctx.fillText((d.pinned?'★ ':'')+d.name.toUpperCase(),label.x,label.y)
-    ctx.font=Math.max(1,Math.round(10/scale))+'px sans-serif';ctx.fillStyle=color(palette.ink,.6);if(scale>.44)ctx.fillText(d.virtualWorkspace?count(d.count,'AGENT','AGENTS')+' / RECORDED FAMILY':'D'+d.id+' / '+count(d.count,'WINDOW','WINDOWS')+' · '+(d.groupName||d.landmark).toUpperCase(),label.x,label.y+16/scale)
+    ctx.font=Math.max(1,Math.round(10/scale))+'px sans-serif';ctx.fillStyle=color(palette.ink,.6);if(scale>.44)ctx.fillText(d.virtualWorkspace?count(d.familyCount||d.count,'AGENT','AGENTS')+(d.collapsed?' · '+d.hiddenCount+' COLLAPSED':' / RECORDED FAMILY'):'D'+d.id+' / '+count(d.count,'WINDOW','WINDOWS')+' · '+(d.groupName||d.landmark).toUpperCase(),label.x,label.y+16/scale)
   })
   scene.buildings.forEach(function(b){var bb=polygonBounds(face(b,camera));if(!view||(bb.maxX>view.minX&&bb.minX<view.maxX&&bb.maxY>view.minY&&bb.minY-40<view.maxY))building(ctx,b,palette,selected,time,scale,lens,camera)})
   ;(scene.groups||[]).forEach(function(g){if(scale<=.25)return;var p=groupLabel(scene,g,camera,scale);ctx.font='600 '+Math.max(1,Math.round(14/scale))+'px sans-serif';ctx.textAlign='center';ctx.fillStyle=color(palette.ink,.95);ctx.fillText(g.name.toUpperCase()+' / '+count(g.count,'DISTRICT','DISTRICTS'),p.x,p.y);ctx.fillStyle=color(g.color,1);ctx.fillRect(p.x-40/scale,p.y+7/scale,80/scale,3/scale)})

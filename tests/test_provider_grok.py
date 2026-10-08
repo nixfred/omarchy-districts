@@ -43,6 +43,22 @@ class GrokProvider(unittest.TestCase):
         (directory / 'output.json').write_text('PRIVATE OUTPUT MUST NOT BE READ')
         return directory
 
+    def test_real_names_from_title_metadata_and_cwd_basename_only(self):
+        self.session(A, cwd='%2Fhome%2Fuser%2FProjects%2Fplonk', generated_title='Plonk\u202e compact\nbugs', agent_name='ignored')
+        self.session(B, cwd='%2Fsecret', agent_name='grok-build-plan')
+        self.session(C)
+        rows = {r["id"]: r for r in g.inventory(self.home)}
+        self.assertEqual(rows[A]['name'], 'Plonk compact bugs')
+        self.assertEqual(rows[A]['label'], 'Plonk compact bugs')
+        self.assertEqual(rows[A]['nameSource'], 'Grok generated session title')
+        self.assertEqual(rows[A]['project'], 'plonk')
+        self.assertEqual(rows[B]['name'], 'grok-build-plan')
+        self.assertIsNone(rows[C]['name'])
+        self.assertEqual(rows[C]['label'], 'Grok ' + C[:8])
+        encoded = json.dumps(list(rows.values()))
+        self.assertNotIn('PRIVATE', encoded)
+        self.assertNotIn('/home/user', encoded)
+
     def test_inventory_metadata_only_without_any_automatic_chat_read(self):
         root = self.session(parentSessionId=B, pid=os.getpid(), status='working')
         self.chat(root, [{'role': 'user', 'content': 'PRIVATE USER'},

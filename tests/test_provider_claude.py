@@ -19,7 +19,7 @@ class Claude(unittest.TestCase):
   root=Path(home)/'projects'/'project';root.mkdir(parents=True,exist_ok=True)
   if child:
    root=root/A/'subagents';root.mkdir(parents=True,exist_ok=True)
-   path=root/('agent-'+CH+'.jsonl');path.with_suffix('.meta.json').write_text(json.dumps({'agentType':'Engineer','description':'PRIVATE','spawnDepth':2,'toolUseId':'private'}))
+   path=root/('agent-'+CH+'.jsonl');path.with_suffix('.meta.json').write_text(json.dumps({'agentType':'Engineer','description':'Audit the bar','spawnDepth':2,'toolUseId':'PRIVATE'}))
   else:path=root/(A+'.jsonl')
   return path
  def test_history_is_selected_assistant_only(self):
@@ -38,6 +38,17 @@ class Claude(unittest.TestCase):
     self.assertEqual(path.suffix,'.json');return real(path,root)
    with patch.object(p,'safe_open',metadata_only):r=p.subagent_inventory(home=h)
    child=next(x for x in r if x['isSubagent']);self.assertIsNone(child['parentId']);self.assertEqual(child['familyId'],A);self.assertEqual(child['availability'],'stored');self.assertEqual(child['status']['type'],'unknown');self.assertFalse(child['capabilities']['canSend']);self.assertNotIn('PRIVATE',json.dumps(r))
+   self.assertEqual(child['name'],'Engineer: Audit the bar');self.assertEqual(child['label'],'Engineer: Audit the bar')
+ def test_stored_parent_name_comes_from_title_records_only(self):
+  with tempfile.TemporaryDirectory()as h:
+   self.fixture(h,True).write_text('');parent=self.fixture(h)
+   lines=[{'type':'ai-title','sessionId':A,'aiTitle':'Generated title'},row('PRIVATE body'),{'type':'user','sessionId':A,'message':{'content':'PRIVATE prompt'}},
+          {'type':'custom-title','sessionId':B,'customTitle':'PRIVATE other session'},{'type':'custom-title','sessionId':A,'customTitle':'Fred named this'},{'type':'ai-title','sessionId':A,'aiTitle':'Later generated'}]
+   parent.write_text('\n'.join(map(json.dumps,lines))+'\n')
+   r=p.subagent_inventory(home=h);root=next(x for x in r if not x['isSubagent'])
+   self.assertEqual(root['name'],'Fred named this');self.assertEqual(root['nameSource'],'Claude custom session title');self.assertNotIn('PRIVATE',json.dumps(r))
+   parent.write_text(json.dumps(lines[0])+'\n'+'x'*(p.TITLE_TAIL_BYTES+10)+'\n')
+   root=next(x for x in p.subagent_inventory(home=h) if not x['isSubagent']);self.assertIsNone(root['name']);self.assertEqual(root['label'],'Claude stored '+A[:8])
  def test_compaction_is_omitted(self):
   with tempfile.TemporaryDirectory()as h:
    f=self.fixture(h,True);f.write_text('');f.with_suffix('.meta.json').write_text('{"agentType":"compaction"}')

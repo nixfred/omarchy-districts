@@ -41,7 +41,7 @@ class PiAdapterTests(unittest.TestCase):
     def test_metadata_decodes_only_header_and_model_records(self):
         model = dict(type='model_change', id='model', parentId=None, provider='kimi-coding', modelId='k3')
         self.write([model, entry('reply', 'model', text='PRIVATE BODY'),
-                    dict(type='session_info', id='name', parentId='reply', name='PRIVATE TITLE')])
+                    dict(type='session_info', id='name', parentId='reply', name='Named session')])
         decoder = json.loads
         decoded_types = []
         def decode(value):
@@ -50,11 +50,14 @@ class PiAdapterTests(unittest.TestCase):
             return item
         with patch.object(pi.json, 'loads', side_effect=decode):
             result = pi.inventory_pi(self.root)
-        self.assertEqual(decoded_types, ['session', 'model_change'])
+        # Only the header, model and explicit `/name` records are decoded.
+        self.assertEqual(decoded_types, ['session', 'model_change', 'session_info'])
         record = result['sessions'][0]
+        self.assertEqual(record['name'], 'Named session')
+        self.assertEqual(record['label'], 'Named session')
         self.assertTrue(record['isKimi3'])
         self.assertEqual(record['modelId'], 'k3')
-        self.assertIn('Kimi3 via Pi', record['label'])
+        self.assertEqual(record['modelProvider'], 'kimi-coding')
         self.assertFalse(record['capabilities']['canSend'])
         self.assertFalse(record['capabilities']['canMonitorLive'])
         self.assertIsNone(record['capabilities']['approvalPending'])

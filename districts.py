@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import selectors
+import stat
 import subprocess
 import sys
 import tempfile
@@ -153,6 +154,34 @@ def seed_for(identity):
 
 def state_path():
     return Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "districts" / "architecture.json"
+
+
+def workspace_titles_path():
+    return Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))) / "omarchy" / "workspace-names.json"
+
+
+def workspace_titles():
+    """Optional titles from the Workspace Names plugin. Absent, foreign-owned,
+    oversized or invalid stores contribute nothing; Districts never writes them."""
+    try:
+        fd=os.open(workspace_titles_path(),os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+        with os.fdopen(fd,'rb') as stream:
+            info=os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_size>65536:
+                return {}
+            data=json.loads(stream.read(65537))
+    except (OSError,ValueError,UnicodeError,RecursionError):
+        return {}
+    titles={}
+    for key,value in (data.items() if isinstance(data,dict) else ()):
+        if isinstance(key,str) and key.isdigit() and isinstance(value,str):
+            try:
+                text=label(' '.join(value.split())[:48])
+            except ValueError:
+                continue
+            if text:
+                titles[key]=text
+    return titles
 
 
 def label(value):
@@ -329,13 +358,17 @@ def snapshot(apps=None):
         state=read_state(path);seeds=state["seeds"]
         previous = dict(seeds)
         data = normalize(monitors, workspaces, clients, active, seeds, apps)
+        titles = workspace_titles()
         for district in data["districts"]:
             key=str(district["id"]);configured=next((w.get('name','')for w in workspaces if w.get('id')==district['id']),"")
             try:configured=label(configured)
             except ValueError:configured=""
             app_mix=sorted(set(w['app']for w in data['windows']if w['workspace']==district['id']),key=str.casefold)
-            automatic=configured if configured and configured!=key else (" + ".join(app_mix[:3])[:48]if app_mix else 'Workspace '+key)
-            source='workspace'if configured and configured!=key else 'apps'if app_mix else 'number'
+            # Real names first: compositor name, then a Workspace Names title, then
+            # the public app mix. An empty district says so instead of "Workspace N".
+            named=configured if configured and configured!=key else ''
+            automatic=named or titles.get(key) or (" + ".join(app_mix[:3])[:48]if app_mix else 'Empty district')
+            source='workspace'if named else 'workspace-names'if titles.get(key) else 'apps'if app_mix else 'empty'
             custom=state['names'].get(key,'')
             district.update({'name':custom or automatic,'nameSource':'custom'if custom else source,'customName':custom,'autoName':automatic,'autoSource':source,'pinned':key in state['pins'],'tint':state['tints'].get(key,seeds[key]%5),'circuitOverride':key in state['tints']})
         if seeds != previous:

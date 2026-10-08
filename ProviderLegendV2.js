@@ -41,7 +41,7 @@ function normalizeMetric(metric,now){
  result.signedSeconds=s;result.paceState=p.state;result.headline=s>0?'+'+duration(s)+' banked':s<0?'−'+duration(-s)+' behind':'0s · on pace'
  result.reason='Allowance pacing credit; no guaranteed compute time or rollover credit'
  if(s<0){
-  if(p.fixedWindow===true&&reset){var expectedRecovery=observed-s*1000,recovery=timestamp(p.recoveryAt)||expectedRecovery;if(recovery<=reset&&Math.abs(recovery-expectedRecovery)<1000){result.wait='Estimated pacing wait '+duration(Math.max(0,(recovery-now)/1000))+' if no additional usage';result.recoveryClock=localClock(recovery)}else result.wait='Estimated pacing wait unavailable: window assumption invalid'}
+  if(p.fixedWindow===true&&reset){var expectedRecovery=observed-s*1000,recovery=timestamp(p.recoveryAt)||expectedRecovery;if(recovery<=reset&&Math.abs(recovery-expectedRecovery)<1000){result.wait='Estimated pacing wait '+duration(Math.max(0,(recovery-now)/1000))+' if no additional usage';result.recoveryClock=localClock(recovery);result.recoveryAt=recovery}else result.wait='Estimated pacing wait unavailable: window assumption invalid'}
   else result.wait='Estimated pacing wait unavailable: rolling or unknown window'
  }else result.wait='No pacing pause indicated by this observation'
  return result
@@ -50,3 +50,29 @@ function primaryIndex(record,windows){var m=record.metric;if(!m)return 0;var ind
 function cards(records,agents,now){return providers.map(function(provider){var record=(records||[]).find(function(r){return r&&r.provider===provider.id})||{},windows=Array.isArray(record.windows)?record.windows.slice(0,8):record.metric?[record.metric]:[],metric=normalizeMetric(record.metric||windows[0],now);return {id:provider.id,name:provider.name,color:provider.color,count:filterAgents(agents,provider.id).length,activity:activity(agents,provider.id,now),metric:metric,ordinaryUsageAllowed:metric.state==='measured'&&typeof record.ordinaryUsageAllowed==='boolean'?record.ordinaryUsageAllowed:null,windows:windows,primaryIndex:primaryIndex(record,windows),label:record.metric&&record.metric.label||'Quota window',overflowCount:finite(record.overflowCount)&&record.overflowCount>0?record.overflowCount:0}})}
 function splitRows(rows){var result=[];rows.forEach(function(row){var chars=Array.from(String(row.value)),parts=[];while(chars.length)parts.push(chars.splice(0,68).join(''));if(!parts.length)parts=[''];parts.forEach(function(part,index){result.push({label:row.label+(parts.length>1?' ('+(index+1)+'/'+parts.length+')':''),value:part})})});return result}
 function detailRows(card,window,now){var metric=normalizeMetric(window||null,now),rows=[{label:'Quota window',value:window&&window.label||'Unavailable'},{label:'Reported workflow states',value:card.activity||'Workflow state unavailable'},{label:'Workflow evidence',value:'Fresh live session-adapter reports only. Saved sessions are not assumed active.'},{label:'Allowance used / remaining',value:metric.used+' / '+metric.remaining},{label:'Rate-limit reset',value:metric.reset},{label:'Provider ordinary usage',value:card.ordinaryUsageAllowed===true?'Provider explicitly reports allowed':card.ordinaryUsageAllowed===false?'Provider explicitly reports restricted':'Permission unknown; not inferred from usage or reset'},{label:'Quota observation',value:metric.observed},{label:'Metric source',value:metric.source},{label:'Pacing meaning',value:metric.reason},{label:'Pacing wait assumption',value:'No additional usage since the quota observation. Pacing recovery is separate from quota reset or provider unblocking.'}];if(card.overflowCount)rows.push({label:'Additional windows',value:card.overflowCount+' outside the bounded display'});return splitRows(rows)}
+// Compact local return time for the side dock: time only today, weekday otherwise.
+function shortClock(value,now){
+ var stamp=timestamp(value);if(!stamp)return null
+ var date=new Date(stamp),today=new Date(finite(now)?now:Date.now()),time=date.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})
+ return date.toDateString()===today.toDateString()?time:date.toLocaleDateString([], {weekday:'short'})+' '+time
+}
+// Persistent side dock: measured providers get a pace card, the rest share one
+// honest "unavailable" line. Same normalizeMetric as the full legend.
+function dock(records,agents,now){
+ var measured=[],unavailable=[],stale=[]
+ cards(records,agents,now).forEach(function(card){
+  var m=card.metric
+  if(m.state==='stale'){stale.push(card.name);return}
+  if(m.state!=='measured'||m.signedSeconds===null){unavailable.push(card.name);return}
+  var behind=m.paceState==='behind'
+  measured.push({id:card.id,name:card.name,color:card.color,count:card.count,paceState:m.paceState,
+   state:behind?'BEHIND':m.paceState==='banked'?'BANKED':'ON PACE',
+   amount:m.signedSeconds===0?'0s':duration(Math.abs(m.signedSeconds)),
+   wait:behind?(m.recoveryAt?'Back on pace in '+duration(Math.max(0,(m.recoveryAt-now)/1000)):'Pacing wait unavailable'):'No pause needed',
+   clock:behind&&m.recoveryAt?'≈ '+shortClock(m.recoveryAt,now)+' local':'',
+   clockShort:behind&&m.recoveryAt?'≈ '+shortClock(m.recoveryAt,now):'',
+   window:card.label})
+ })
+ var notes=[];if(stale.length)notes.push(stale.join(', ')+': stale, refresh');if(unavailable.length)notes.push(unavailable.join(', ')+': quota unavailable')
+ return {cards:measured,note:notes.join(' · ')}
+}

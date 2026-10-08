@@ -13,7 +13,7 @@ import time
 
 ROOT=Path(__file__).resolve().parent
 ID='nixfred.districts'
-RUNTIME=['v3.0.0/AgentCityV2.js', 'v3.0.0/AgentV2.qml', 'v3.0.0/AtlasV2.qml', 'v3.0.0/CameraV2.js', 'v3.0.0/CityV2.js', 'v3.0.0/DistrictsV2.qml', 'v3.0.0/GroupsV2.js', 'v3.0.0/InspectorV2.qml', 'v3.0.0/LegendV2.qml', 'v3.0.0/LensV2.js', 'v3.0.0/LensV2.qml', 'v3.0.0/MoveV2.qml', 'v3.0.0/NavigationV2.js', 'v3.0.0/NavigationV2.qml', 'v3.0.0/NeonActionV2.qml', 'v3.0.0/OrganizeV2.qml', 'v3.0.0/PagedListV2.qml', 'v3.0.0/ResourcesV2.js', 'v3.0.0/ResourcesV2.qml', 'v3.0.0/districts.py', 'v3.0.0/history.py', 'v3.0.0/organize.py', 'v3.0.0/resources.py', 'v3.0.0/sessions.py', 'v3.0.0/provider_claude.py', 'v3.0.0/provider_grok.py', 'v3.0.0/provider_pi.py', 'v3.0.0/provider_metrics.py', 'v3.0.0/ProviderLegendV2.js', 'v3.0.0/ProviderLegendV2.qml', 'manifest.json', 'README.md', 'LICENSE']
+RUNTIME=['v3.0.0/AgentCityV2.js', 'v3.0.0/AgentV2.qml', 'v3.0.0/AtlasV2.qml', 'v3.0.0/CameraV2.js', 'v3.0.0/CityV2.js', 'v3.0.0/DistrictsV2.qml', 'v3.0.0/GroupsV2.js', 'v3.0.0/InspectorV2.qml', 'v3.0.0/LegendV2.qml', 'v3.0.0/LensV2.js', 'v3.0.0/LensV2.qml', 'v3.0.0/MoveV2.qml', 'v3.0.0/NavigationV2.js', 'v3.0.0/NavigationV2.qml', 'v3.0.0/NeonActionV2.qml', 'v3.0.0/OrganizeV2.qml', 'v3.0.0/PagedListV2.qml', 'v3.0.0/ResourcesV2.js', 'v3.0.0/ResourcesV2.qml', 'v3.0.0/districts.py', 'v3.0.0/history.py', 'v3.0.0/organize.py', 'v3.0.0/resources.py', 'v3.0.0/sessions.py', 'v3.0.0/provider_claude.py', 'v3.0.0/provider_grok.py', 'v3.0.0/provider_pi.py', 'v3.0.0/provider_metrics.py', 'v3.0.0/ProviderLegendV2.js', 'v3.0.0/ProviderLegendV2.qml', 'v3.0.0/PaceDockV2.qml', 'manifest.json', 'README.md', 'LICENSE']
 
 def ipc(method, *args):
  return subprocess.check_output(['omarchy-shell', 'shell', method, *args],

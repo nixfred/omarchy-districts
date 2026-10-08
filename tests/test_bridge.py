@@ -11,6 +11,9 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('districts_bridge', ROOT/'districts.py')
 bridge = importlib.util.module_from_spec(spec); spec.loader.exec_module(bridge)
+# Never read the developer's real Workspace Names store from unit tests.
+_isolated_titles = tempfile.TemporaryDirectory()
+bridge.workspace_titles_path = lambda: Path(_isolated_titles.name) / 'absent.json'
 
 def fixture():
     return ([{'id':0,'name':'DP-1','activeWorkspace':{'id':2},'width':1920,'height':1080,'scale':1}],
@@ -140,6 +143,15 @@ with m.architecture_lock(p):
             w[0]['name']='Release';q.side_effect=[m,w,c,a];data=bridge.snapshot({});self.assertEqual(data['districts'][0]['name'],'Release');self.assertEqual(data['districts'][0]['nameSource'],'workspace')
             bridge.customize(2,name='Custom');q.side_effect=[m,w,c,a];data=bridge.snapshot({});self.assertEqual(data['districts'][0]['name'],'Custom');self.assertEqual(data['districts'][0]['nameSource'],'custom')
             self.assertNotIn('PRIVATE',json.dumps(data))
+    def test_workspace_names_titles_rank_after_compositor_names(self):
+        with tempfile.TemporaryDirectory()as d,patch.object(bridge,'state_path',return_value=Path(d)/'architecture.json'),patch.object(bridge,'workspace_titles_path',return_value=Path(d)/'workspace-names.json'),patch.object(bridge,'query')as q:
+            m,w,c,a=fixture();w[0]['name']='2';titles=Path(d)/'workspace-names.json'
+            titles.write_text(json.dumps({'2':'Herdr \u00b7 Projects \u00b7 atlas','_config':{'hold':1},'x':'ignored','3':'bad\u0007name','4':'W'*80}))
+            q.side_effect=[m,w,c,a];data=bridge.snapshot({});self.assertEqual(data['districts'][0]['name'],'Herdr \u00b7 Projects \u00b7 atlas');self.assertEqual(data['districts'][0]['nameSource'],'workspace-names')
+            self.assertEqual(bridge.workspace_titles()['4'],'W'*48);self.assertNotIn('3',bridge.workspace_titles());self.assertNotIn('x',bridge.workspace_titles())
+            w[0]['name']='Release';q.side_effect=[m,w,c,a];self.assertEqual(bridge.snapshot({})['districts'][0]['name'],'Release')
+            w[0]['name']='2';titles.write_text('not json');q.side_effect=[m,w,c,a];data=bridge.snapshot({});self.assertNotEqual(data['districts'][0]['nameSource'],'workspace-names');self.assertFalse(data['districts'][0]['name'].startswith('Workspace'))
+            titles.unlink();(Path(d)/'elsewhere.json').write_text('{"2":"Linked"}');titles.symlink_to(Path(d)/'elsewhere.json');self.assertEqual(bridge.workspace_titles(),{})
     def test_relocation_validates_all_targets_and_is_silent(self):
         m,w,c,a=fixture();w.append({'id':3,'monitorID':0})
         with patch.object(bridge,'query',side_effect=[c,w,[{**c[0],'workspace':{'id':3}}]]),patch.object(bridge,'lua_supported',return_value=True),patch.object(bridge,'command',return_value='ok')as cmd:

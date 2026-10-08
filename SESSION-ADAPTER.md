@@ -1,8 +1,9 @@
 # Local session adapter contract
 
-Districts' automatic inventory contains provider/session IDs, explicit ancestry,
-reported state, availability and capability reasons. It omits titles, prompts,
-replies, paths and PID guesses. Agent courts represent sessions, not OS windows.
+Districts' automatic inventory contains provider/session IDs, real session names
+from explicit provider name/title metadata, working-directory basenames, explicit
+ancestry, reported state, availability and capability reasons. It omits prompts,
+message bodies, replies, full paths and PID guesses. Agent courts represent sessions, not OS windows.
 No monitor/workspace ownership is inferred. Generic Codex guardian/compaction
 helpers are not rendered as invented semantic subagents.
 

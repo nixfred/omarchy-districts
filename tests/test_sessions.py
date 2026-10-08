@@ -17,7 +17,7 @@ EMPTY_EXTRAS=(lambda **kw:[],lambda:{'sessions':[],'notices':[],'bounded':False,
 
 def thread(sid=A, parent=None, status=None, direct=True):
     return {'id':sid,'parentThreadId':parent,'sessionId':A,'status':status or {'type':'idle'},
-            'canAcceptDirectInput':direct,'preview':'PRIVATE PROMPT','name':'PRIVATE TITLE','cwd':'/private/path'}
+            'canAcceptDirectInput':direct,'preview':'PRIVATE PROMPT','name':'Fix the bar','cwd':'/private/path/project-x'}
 
 
 def fixture_id(number):
@@ -98,11 +98,11 @@ class Sessions(unittest.TestCase):
             self.assertTrue(bounded);self.assertEqual(len(rows),33)
 
     def test_claude_cap_reports_metadata_only_notice(self):
-        class Result:returncode=0;stdout=json.dumps([{'sessionId':fixture_id(i),'state':'working','name':'PRIVATE','cwd':'/private'}for i in range(129)])
+        class Result:returncode=0;stdout=json.dumps([{'sessionId':fixture_id(i),'state':'working','name':'Named session','cwd':'/private/x','prompt':'PRIVATE'}for i in range(129)])
         notices=[];rows=s.claude_inventory(lambda *a,**k:Result(),notices)
         self.assertEqual(len(rows),s.LIMIT)
         self.assertEqual(notices[0]['provider'],'claude');self.assertIn('may be omitted',notices[0]['reason'])
-        self.assertNotIn('PRIVATE',json.dumps([rows,notices]))
+        self.assertNotIn('PRIVATE',json.dumps([rows,notices]));self.assertNotIn('/private',json.dumps(rows))
 
     def test_inventory_preserves_provider_reasons_and_bounds(self):
         def claude(*args,**kwargs):
@@ -124,7 +124,11 @@ class Sessions(unittest.TestCase):
         row=s.codex_record(thread(B,A),True)
         self.assertEqual(row['parentId'],A);self.assertEqual(row['familyId'],A)
         encoded=json.dumps(row)
-        for private in ['PRIVATE','preview','name','cwd','pid','window']:
+        # Real session names and the working-directory basename are shown;
+        # prompts/previews, full paths, PIDs and window data never are.
+        self.assertEqual(row['name'],'Fix the bar');self.assertEqual(row['label'],'Fix the bar')
+        self.assertEqual(row['nameSource'],'Codex thread name');self.assertEqual(row['project'],'project-x')
+        for private in ['PRIVATE','preview','/private','cwd','pid','window']:
             self.assertNotIn(private,encoded)
         self.assertTrue(row['capabilities']['canSend'])
 
@@ -264,9 +268,14 @@ class Sessions(unittest.TestCase):
             with self.assertRaises(ValueError):s.latest_claude(A,d)
 
     def test_claude_inventory_reports_actual_state_no_parent_guess(self):
-        class Result:returncode=0;stdout=json.dumps([{'sessionId':A,'state':'working','name':'private','cwd':'/private'}])
+        class Result:returncode=0;stdout=json.dumps([{'sessionId':A,'state':'working','name':'Atlas:desk\u202e\n  herdr','cwd':'/secret/atlas'},
+                                                     {'sessionId':B,'status':'busy','kind':'interactive','name':'','cwd':'/'}])
         result=s.claude_inventory(lambda *a,**k:Result())
         self.assertEqual(result[0]['status']['type'],'working');self.assertIsNone(result[0]['parentId'])
-        self.assertFalse(result[0]['capabilities']['canSend']);self.assertNotIn('private',json.dumps(result))
+        # Interactive sessions report `status`, background agents `state`.
+        self.assertEqual(result[1]['status']['type'],'busy');self.assertEqual(result[1]['kind'],'interactive')
+        self.assertEqual(result[0]['name'],'Atlas:desk herdr');self.assertEqual(result[0]['project'],'atlas')
+        self.assertIsNone(result[1]['name']);self.assertEqual(result[1]['label'],'Claude '+B[:8]);self.assertIsNone(result[1]['project'])
+        self.assertFalse(result[0]['capabilities']['canSend']);self.assertNotIn('secret',json.dumps(result))
 
 if __name__=='__main__':unittest.main()

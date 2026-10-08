@@ -31,7 +31,7 @@ function classify(d,windows,prefs){
  var active=groups.map(function(g){return g.key}).filter(function(k){return strong[k]>0}),total=active.reduce(function(n,k){return n+strong[k]},0)
  if(active.length){active.sort(function(a,b){return strong[b]-strong[a]});var best=active[0];if(strong[best]>total/2)return {key:best,reason:'Public app roles: '+evidence.sort().slice(0,3).join(' + ')};return {key:'mixed',reason:'Several activity groups; no majority'} }
  // Only use an explicit compositor label if app roles provide no activity signal.
- if(d.autoSource==='workspace'){
+ if(d.autoSource==='workspace'||d.autoSource==='workspace-names'){
   var text=String(d.autoName||'').toLowerCase(),matches=[]
   var names={development:/\b(dev|development|coding)\b/,entertainment:/\b(entertainment|games|gaming|media)\b/,communication:/\b(communication|chat|calls)\b/,research:/\b(research|office|study)\b/,system:/\b(system|tools)\b/}
   for(var k in names)if(names[k].test(text))matches.push(k)

@@ -39,6 +39,10 @@ Item {
   readonly property var projectedBounds:City.bounds(scene,orbitCamera,zoom)
   property var liveSnapshot:({schema:1,boroughs:[],districts:[],windows:[]})
   property var agentRecords:[]
+  property var collapsedFamilies:({})
+  // The persistent quota pace dock sits on the city's right edge; framing leaves room for it.
+  readonly property bool paceDockVisible:opened&&settings.paceDock!==false&&!replaying
+  readonly property real paceReserve:paceDockVisible?paceDock.width+24:0
   property string providerFilter:""
   property var providerMetrics:[]
   property var metricsContext:null
@@ -131,7 +135,7 @@ Item {
   readonly property var pinnedDistricts: scene.districts.filter(function(d){return d.pinned})
   readonly property var atlasResults: {
     var q=queryText.trim().toLowerCase(),out=[]
-    scene.buildings.filter(function(b){return b.kind==="agent"&&!b.dying}).forEach(function(b){if(!q||(b.app+" "+b.agent.provider+" "+b.agent.id).toLowerCase().indexOf(q)>=0)out.push({type:"building",key:b.key,label:b.app,subtitle:"Agent session / "+b.agent.availability})})
+    scene.buildings.filter(function(b){return b.kind==="agent"&&!b.dying}).forEach(function(b){if(!q||(b.app+" "+(b.agent.project||"")+" "+b.agent.provider+" "+b.agent.id).toLowerCase().indexOf(q)>=0)out.push({type:"building",key:b.key,label:b.app,subtitle:Agents.subtitle(b.agent)+(b.agentGlow?" · "+b.agentGlow.label:"")})})
     scene.districts.slice().sort(function(a,b){return Number(b.pinned)-Number(a.pinned)||a.id-b.id}).forEach(function(d){if(!q||(d.name+" district "+d.id).toLowerCase().indexOf(q)>=0)out.push({type:"district",key:d.id,label:d.name,subtitle:d.virtualWorkspace?d.count+" agent sessions":"D"+d.id+" · "+d.count+(d.count===1?" window":" windows")})})
     snapshot.windows.forEach(function(w){if(!q||(w.app+" "+w.class+" "+root.districtName(w.workspace)).toLowerCase().indexOf(q)>=0)out.push({type:"building",key:w.address,label:w.app,subtitle:root.districtName(w.workspace)})})
     return out
@@ -245,16 +249,17 @@ Item {
   function filterProvider(provider){providerFilter=providerFilter===provider?"":provider;renderCurrentSnapshot();fit();if(agentTarget&&providerFilter&&providerFamily(agentTarget)!==providerFilter)selectAgent(null)}
   function visibleAgents(input){input=input.filter(function(a){return !providerFilter||providerFamily(a)===providerFilter});if(settings.storedAgents===true||replaying||providerFilter)return input;var found={},out=input.filter(function(a){return a.availability==="live"});out.forEach(function(a){found[Agents.key(a)]=true});for(var n=0;n<16;n++){var changed=false;out.slice().forEach(function(a){var p=Agents.parent(a,input);if(p&&!found[Agents.key(p)]){found[Agents.key(p)]=true;out.push(p);changed=true}});if(!changed)break}return out}
 
+  function toggleFamily(family){if(!family)return;var next=Object.assign({},collapsedFamilies);if(next[family])delete next[family];else next[family]=true;collapsedFamilies=next;renderCurrentSnapshot()}
   function renderCurrentSnapshot(){var value=viewSource;renderSnapshot(value,replaying?(value.agents||[]):agentRecords)}
   function renderSnapshot(value,agents) {
     value=FocusLens.apply(Object.assign({},value,{agents:visibleAgents(agents||[])}),focusLens)
     // CPU changes update facade lights and the inspector, never city geometry.
     var topology=value.windows.map(function(w){var row=Object.assign({},w);delete row.ownerCpu;delete row.pid;return row})
-    var signature=JSON.stringify([value.boroughs,value.districts,topology,value.focused,(value.agents||[]).map(function(a){return [a.provider,a.id,a.parentId,a.familyId]}),focusLens])
+    var signature=JSON.stringify([value.boroughs,value.districts,topology,value.focused,(value.agents||[]).map(function(a){return [a.provider,a.id,a.parentId,a.familyId]}),focusLens,Object.keys(collapsedFamilies).sort()])
     updateCount++;failed=false;message=""
-    if(signature===sceneSignature){snapshot=value;City.updateActivity(scene,value.windows);scene.buildings.forEach(function(b){if(b.kind==="agent"){var a=(value.agents||[]).find(function(a){return Agents.key(a)===b.key});if(a)b.agent=a}});scene=Object.assign({},scene);metricUpdates++;paint();if(!hasFitted&&opened)fitTimer.restart();return}
+    if(signature===sceneSignature){snapshot=value;City.updateActivity(scene,value.windows);scene.buildings.forEach(function(b){if(b.kind==="agent"){var a=(value.agents||[]).find(function(a){return Agents.key(a)===b.key});if(a)Agents.applyState(b,a)}});scene=Object.assign({},scene);metricUpdates++;paint();if(!hasFitted&&opened)fitTimer.restart();return}
     sceneSignature=signature;sceneBuildCount++
-    var next=Agents.decorate(City.layout(value),value.agents||[])
+    var next=Agents.decorate(City.layout(value),value.agents||[],{collapsed:collapsedFamilies})
     var old={};scene.buildings.forEach(function(b){old[b.key]=b})
     var changed=next.buildings.some(function(b){return !old[b.key]||old[b.key].targetX!==b.x||old[b.key].targetY!==b.y})||scene.buildings.some(function(b){return !next.buildings.some(function(n){return n.key===b.key})})
     snapshot=value;scene=City.transition(scene,next,motion,Date.now())
@@ -272,7 +277,7 @@ Item {
     cameraFrom=currentCamera;cameraTarget=value;cameraAt=Date.now();cameraDuration=duration||420;cameraTimer.start()
   }
   function fit() {
-    cameraTo(Camera.fit(projectedBounds,stage.width,stage.height,0,orbitCamera));hasFitted=true
+    cameraTo(Camera.fit(projectedBounds,stage.width,stage.height,paceReserve,orbitCamera));hasFitted=true
   }
   function resetCamera(){navigation.userTakeover();var c=Camera.reset(currentCamera);yaw=c.yaw;tilt=c.tilt;selected="";selectedDistrict=-1;fit()}
   function restoreCamera(value,target){navigation.userTakeover();var c=Camera.orbit(value,value.yaw,value.tilt);yaw=c.yaw;tilt=c.tilt;var bounds=City.bounds(scene,c,c.zoom),r=Camera.range(stage.width,stage.height);c.zoom=City.clamp(c.zoom,r.min,r.max);c.x=City.clamp(c.x,-bounds.maxX*c.zoom-stage.width/3,-bounds.minX*c.zoom+stage.width/3);c.y=City.clamp(c.y,-bounds.maxY*c.zoom-stage.height/3,-bounds.minY*c.zoom+stage.height/3);cameraTo(c);if(target>0&&scene.districts.some(function(d){return d.id===target}))selectedDistrict=target;else selectedDistrict=-1;selected=""}
@@ -280,7 +285,7 @@ Item {
   function focusDistrict(id,fromTour,instant) {
     if(!fromTour)navigation.userTakeover()
     nameEditing=false;selectedDistrict=id;selected="";inspector.showInfo()
-    for(var i=0;i<scene.districts.length;i++)if(scene.districts[i].id===id){var p=City.project(scene.districts[i].x,scene.districts[i].y,20,orbitCamera),b=City.districtBounds(scene.districts[i],orbitCamera),c=Camera.fit(b,stage.width,stage.height,0,orbitCamera);cameraTo(c,instant?0:420);return}
+    for(var i=0;i<scene.districts.length;i++)if(scene.districts[i].id===id){var p=City.project(scene.districts[i].x,scene.districts[i].y,20,orbitCamera),b=City.districtBounds(scene.districts[i],orbitCamera),c=Camera.fit(b,stage.width,stage.height,paceReserve,orbitCamera);cameraTo(c,instant?0:420);return}
   }
   function inspectBuilding(key) {
     navigation.userTakeover()
@@ -547,6 +552,20 @@ Item {
             Image{anchors.fill:parent;source:parent.visible?Quickshell.iconPath(parent.modelData.icon,true):"";sourceSize:Qt.size(40,40);fillMode:Image.PreserveAspectFit;asynchronous:true}
           }
         }
+        // Working / needs-attention agent buildings carry a roof beacon. It pulses
+        // with QML opacity animation (no canvas repaint) and holds still under
+        // reduced motion. The state comes only from the adapter's live report.
+        Repeater{model:root.opened?root.scene.buildings.filter(function(b){return b.kind==="agent"&&!b.dying&&b.agentGlow&&b.agentGlow.pulse}).slice(0,48):[]
+          Item{id:beacon;required property var modelData
+            readonly property var pt:{var tick=root.transitionClock;return City.project(modelData.x,modelData.y,modelData.height+24,root.orbitCamera)}
+            x:stage.width/2+root.panX+pt.x*root.zoom-width/2;y:stage.height/2+root.panY+pt.y*root.zoom-height/2
+            width:Math.max(10,22*Math.min(1.4,root.zoom));height:width
+            visible:root.zoom>.28&&x>-width&&y>-height&&x<stage.width&&y<stage.height&&!(root.lens&&root.lens!==modelData.appClass)
+            Rectangle{anchors.fill:parent;radius:width/2;color:"transparent";border.width:2;border.color:beacon.modelData.agentGlow.color
+              opacity:.85;SequentialAnimation on opacity{running:root.motion&&beacon.visible&&(root.testMode||!idle.isIdle);loops:Animation.Infinite;NumberAnimation{from:.95;to:.2;duration:beacon.modelData.agentGlow.state==="waiting"?520:1100;easing.type:Easing.InOutSine}NumberAnimation{from:.2;to:.95;duration:beacon.modelData.agentGlow.state==="waiting"?520:1100;easing.type:Easing.InOutSine}}}
+            Rectangle{anchors.centerIn:parent;width:parent.width*.36;height:width;radius:width/2;color:beacon.modelData.agentGlow.color}
+          }
+        }
         Repeater{model:root.opened?root.scene.roads.filter(function(r){return r.kind!=="agent-link"}).slice(0,64):[]
           Rectangle{required property var modelData;readonly property var points:City.roadPoints(modelData,root.orbitCamera)
             readonly property real t:(root.clock*.07+(modelData.seed%100)/100)%1
@@ -575,6 +594,12 @@ Item {
           x:City.clamp(root.pointer.x+16,8,stage.width-width-8);y:City.clamp(root.pointer.y-50,60,stage.height-height-8);width:Math.min(250,hoverText.implicitWidth+24);height:36;radius:6;color:root.panelPaper;border.color:Qt.alpha(root.accent,.55)
           Text{id:hoverText;anchors.centerIn:parent;width:parent.width-20;elide:Text.ElideRight;font.pixelSize:12;color:root.ink;textFormat:Text.PlainText;text:{if(!root.hoverTarget)return "";if(root.hoverTarget.type==="group")return Groups.info(root.hoverTarget.key).name+" / Group city";if(root.hoverTarget.type==="district")return root.districtName(root.hoverTarget.key);var b=root.scene.buildings.filter(function(b){return b.key===root.hoverTarget.key})[0];return b?b.app+" / "+root.districtName(b.workspace):""}}
         }
+        PaceDockV2{id:paceDock;city:root;visible:root.paceDockVisible;z:3;x:stage.width-width-12;y:12;maxHeight:stage.height-24;mini:stage.width<700
+          records:root.providerMetrics;agents:root.agentRecords;activeProvider:root.providerFilter
+          onProviderSelected:function(provider){root.filterProvider(provider)}
+          onDetailsRequested:root.openPanel("providers")
+          onHideRequested:root.saveSetting("paceDock",false)
+        }
         Rectangle{id:mapPanel;x:12;y:stage.height-height-12;width:root.ui.compact?170:210;height:root.ui.compact?112:136;color:Qt.alpha(root.panelPaper,.95);border.color:Qt.alpha(root.accent,.3);radius:8
           Canvas{id:minimap;anchors.fill:parent;anchors.margins:8;onPaint:{var c=getContext("2d");c.reset();c.clearRect(0,0,width,height);var b=root.projectedBounds,s=Math.min(width/(b.maxX-b.minX+80),height/(b.maxY-b.minY+80)),cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2;c.save();c.translate(width/2,height/2);c.scale(s,s);root.scene.districts.forEach(function(d){var p=City.project(d.x,d.y,0,root.orbitCamera);c.fillStyle=d.groupColor||root.neons[d.tint||0];c.globalAlpha=d.id===root.selectedDistrict?.9:.4;c.fillRect(p.x-cx-35,p.y-cy-16,70,32)});c.globalAlpha=1;c.strokeStyle=String(root.accent);c.lineWidth=1/s;var v=root.cameraView;c.strokeRect(v.minX-cx,v.minY-cy,v.maxX-v.minX,v.maxY-v.minY);c.restore()}}
           MouseArea{id:minimapInput;anchors.fill:parent;cursorShape:Qt.PointingHandCursor;function recenter(mouse){navigation.userTakeover();var b=root.projectedBounds,s=Math.min(minimap.width/(b.maxX-b.minX+80),minimap.height/(b.maxY-b.minY+80)),sx=(mouse.x-width/2)/s+(b.minX+b.maxX)/2,sy=(mouse.y-height/2)/s+(b.minY+b.maxY)/2;root.cameraTo({x:-sx*root.zoom,y:-sy*root.zoom,zoom:root.zoom},240)}onPressed:function(mouse){recenter(mouse)}onPositionChanged:function(mouse){if(pressed)recenter(mouse)}}
@@ -601,6 +626,7 @@ Item {
       Row{x:root.ui.margin;y:84;spacing:8
         NeonActionV2{id:deskButton;city:root;text:"Agent Desk";onClicked:root.openPanel("agents")}
         NeonActionV2{id:providersButton;city:root;text:"Providers";onClicked:root.openPanel("providers")}
+        NeonActionV2{id:paceButton;city:root;text:root.settings.paceDock!==false?"Pace dock ✓":"Pace dock";checked:root.settings.paceDock!==false;onClicked:{root.saveSetting("paceDock",root.settings.paceDock===false);fitTimer.restart()}}
         Text{anchors.verticalCenter:parent.verticalCenter;text:root.providerFilter?"Filter: "+root.providerFilter:"";color:root.ink;font.pixelSize:12}
       }
       InspectorV2{id:inspector;city:root;x:body.width-width-root.ui.margin;y:root.ui.header;width:root.ui.sidebar;height:body.height-y-root.ui.footer}

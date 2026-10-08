@@ -38,6 +38,6 @@ All buildings and the global control open one desk. Its provider-scoped selector
 
 ## Content boundaries
 
-Metadata inventory omits titles, prompts, replies, paths and PID guesses. Reading a selected reply is opt-in and bounded. Displayed replies and drafts use plain text and pages. Instruction confirmation identifies the provider and exact session; replies, drafts and submission contents do not enter activity replay or saved camera state.
+Metadata inventory includes each session's real name where the provider records one: Codex thread name or agent nickname, Claude `agents --json` name or stored custom/agent/generated title records, Claude subagent type and description, Grok generated title or agent name, and Pi `/name`. Only explicit name/title fields are read, bounded to 64 visible characters with control and bidi characters removed; the working directory contributes its basename only. Prompts, message bodies, replies, full paths and PID guesses stay out. Reading a selected reply is opt-in and bounded. Displayed replies and drafts use plain text and pages. Instruction confirmation identifies the provider and exact session; replies, drafts and submission contents do not enter activity replay or saved camera state.
 
 Fixture tests can establish protocol handling and guards. They cannot establish that a real user session accepted an instruction. Live sending is a user action and must be reported separately from mocked transport tests.

@@ -21,6 +21,9 @@ MAX_ENTRIES = 20000
 MAX_TEXT = 65536
 ID = re.compile(r"[A-Za-z0-9._:-]{1,128}\Z")
 MODEL_LINE = re.compile(rb'^\s*\{\s*"type"\s*:\s*"model_change"\s*[,}]')
+INFO_LINE = re.compile(rb'^\s*\{\s*"type"\s*:\s*"session_info"\s*[,}]')
+NAME_LIMIT = 64
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069]')
 KIMI_MODELS = frozenset(('k3', 'k3-256k', 'kimi-for-coding'))
 SEND_REASON = ('Pi RPC belongs to its owning stdin/stdout subprocess. No supported '
                'attach transport to this existing session is verified. An in-process '
@@ -31,6 +34,13 @@ SOURCE = ('Selected Pi saved JSONL path ending at its last persisted entry; '
 
 def stamp():
     return datetime.now(timezone.utc).isoformat()
+
+
+def display_name(value):
+    if not isinstance(value, str):
+        return None
+    text = ' '.join(CONTROL.sub(' ', value).split())
+    return text[:NAME_LIMIT] or None
 
 
 def ident(value):
@@ -109,8 +119,10 @@ def header_read(stream):
     item = json.loads(line)
     if not isinstance(item, dict) or item.get('type') != 'session' or item.get('version') not in (2, 3):
         raise ValueError('Unsupported Pi saved-session format; no migration is performed.')
+    cwd = item.get('cwd')
     return {'id': ident(item.get('id')), 'version': item['version'],
-            'forkAncestryRecorded': bool(item.get('parentSession'))}
+            'forkAncestryRecorded': bool(item.get('parentSession')),
+            'project': display_name(os.path.basename(cwd.rstrip('/'))) if isinstance(cwd, str) else None}
 
 
 def lines(stream):
@@ -135,8 +147,14 @@ def metadata(path, root):
     stream, _ = safe_open(path, root)
     with stream:
         header = header_read(stream)
-        model_provider = model_id = None
+        model_provider = model_id = name = None
         for line in lines(stream):
+            if INFO_LINE.match(line):
+                # Pi `/name` records; the latest explicit session name wins.
+                item = json.loads(line)
+                if isinstance(item, dict) and item.get('type') == 'session_info':
+                    name = display_name(item.get('name')) or name
+                continue
             if not MODEL_LINE.match(line):
                 continue
             item = json.loads(line)
@@ -145,7 +163,7 @@ def metadata(path, root):
             provider, model = item.get('provider'), item.get('modelId')
             if isinstance(provider, str) and isinstance(model, str):
                 model_provider, model_id = provider[:128], model[:128]
-        header.update(modelProvider=model_provider, modelId=model_id,
+        header.update(modelProvider=model_provider, modelId=model_id, name=name,
                       isKimi3=model_provider == 'kimi-coding' and model_id in KIMI_MODELS)
         return header
 
@@ -180,7 +198,9 @@ def inventory_pi(home=None):
             continue
         prefix = 'Kimi3 via Pi' if header['isKimi3'] else 'Pi'
         records.append({'id': sid, 'provider': 'pi', 'key': 'agent:pi:' + sid,
-                        'parentId': None, 'familyId': sid, 'label': prefix + ' ' + sid[:8],
+                        'parentId': None, 'familyId': sid, 'label': header['name'] or prefix + ' ' + sid[:8],
+                        'name': header['name'], 'nameSource': 'Pi session_info name' if header['name'] else None,
+                        'project': header['project'],
                         'modelProvider': header['modelProvider'], 'modelId': header['modelId'],
                         'isKimi3': header['isKimi3'], 'forkAncestryRecorded': header['forkAncestryRecorded'],
                         'modelSource': 'Last saved model_change record; not verified live model selection',

@@ -21,3 +21,28 @@ const explicit=[{id:'parent',provider:'codex',familyId:'family-a'},{id:'child',p
 const source=JSON.stringify({scene:s,records:deep});const deterministic=c.decorate(s,deep);assert.equal(JSON.stringify(c.decorate(s,deep.slice().reverse())),JSON.stringify(deterministic));assert.equal(JSON.stringify({scene:s,records:deep}),source);
 const largeDesktop={districts:[{id:1,x:500,y:0,width:900,height:900}],buildings:[],roads:[],groups:[]};geometry=verifyGeometry(c.decorate(largeDesktop,deep),deep);assert(geometry.group.worldBounds.minX>=largeDesktop.districts[0].x+450+320);
 console.log('PASS 128 sibling/independent/deep/heterogeneous families; exact platform/group bounds; cumulative hierarchy rows; cycle/missing/conflicting family metadata; no invented parent links; deterministic immutable layout.');
+// Real names, reported-state glow, in-place state refresh and family collapse.
+assert.equal(c.displayName({provider:'claude',name:'Atlas:desk‮ herdr',project:'atlas'}),'Atlas:desk herdr');
+assert.equal(c.displayName({provider:'pi',isKimi3:true,project:'beam.omarchy'}),'Kimi · beam.omarchy');
+assert.equal(c.displayName({provider:'grok',id:'01a02743-1111',label:'Grok 01a02743'}),'Grok 01a02743');
+assert.equal(c.subtitle({provider:'codex',name:'Fix bar',project:'flea',availability:'live',status:{type:'idle'}}),'Codex · flea · live · idle');
+const glowOf=(availability,type,flags)=>c.glow({availability,status:{type,activeFlags:flags||[]}}).state;
+assert.equal(glowOf('live','busy'),'working');assert.equal(glowOf('live','active'),'working');assert.equal(glowOf('live','blocked'),'waiting');
+assert.equal(glowOf('live','idle',['waitingOnApproval']),'waiting');assert.equal(glowOf('live','idle'),'idle');assert.equal(glowOf('live','unknown'),'dormant');
+assert.equal(glowOf('stored','busy'),'dormant','stored records never glow as live work');assert.equal(c.glow(null).state,'dormant');
+const named=c.decorate(s,[{id:'n1',provider:'claude',name:'Atlas:desk:herdr',availability:'live',status:{type:'busy'}},{id:'n2',provider:'codex',project:'flea',availability:'stored',status:{type:'notLoaded'}}]);
+const n1=named.buildings.find(b=>b.sessionId==='n1'),n2=named.buildings.find(b=>b.sessionId==='n2');
+assert.equal(n1.app,'Atlas:desk:herdr');assert.equal(n1.agentGlow.state,'working');assert(n1.illumination>n2.illumination);assert.equal(n2.app,'Codex · flea');
+assert(named.districts.some(d=>d.name==='Atlas:desk:herdr'&&d.nameSource==='session-name'));
+c.applyState(n1,{id:'n1',provider:'claude',name:'Renamed',availability:'live',status:{type:'idle'}});assert.equal(n1.app,'Renamed');assert.equal(n1.agentGlow.state,'idle');assert.equal(n1.illumination,c.glow({availability:'live',status:{type:'idle'}}).illumination);
+const fam=[{id:'root',provider:'codex'},{id:'kid-1',provider:'codex',parentId:'root'},{id:'kid-2',provider:'codex',parentId:'kid-1'}];
+const open=c.decorate(s,fam),court=open.districts.find(d=>d.kind==='agentFamily');assert(court.collapsible&&!court.collapsed&&court.hiddenCount===0&&court.familyCount===3);
+const shut=c.decorate(s,fam,{collapsed:{[court.sessionFamily]:true}}),shutCourt=shut.districts.find(d=>d.kind==='agentFamily');
+assert.equal(shut.buildings.length,1);assert(shutCourt.collapsed&&shutCourt.hiddenCount===2&&shutCourt.familyCount===3);assert.equal(shut.buildings[0].collapsedChildren,2);assert.equal(shut.roads.filter(r=>r.kind==='agent-link').length,0);assert.equal(shutCourt.id,court.id,'collapse keeps court identity for selection');
+const lone=c.decorate(s,[{id:'solo',provider:'claude'}],{collapsed:{}});assert.equal(lone.districts.find(d=>d.kind==='agentFamily').collapsible,false);
+const orphans=[{id:'o1',provider:'claude',familyId:'f',isSubagent:true},{id:'o2',provider:'claude',familyId:'f',isSubagent:true}],oc=c.decorate(s,orphans).districts.find(d=>d.kind==='agentFamily');assert.equal(oc.collapsible,false,'no reported root means nothing to collapse to');
+console.log('PASS real names before IDs, reported-state glow (stored never live), in-place refresh, family collapse/expand keeps roots and court identity.');
+assert.equal(c.signText('Fix Pulse bar layout'),'Fix Pulse');assert.equal(c.signText('Atlas:desk:herdr'),'Atlas:desk');assert.equal(c.signText('downloader-f1'),'downloader');assert.equal(c.signText('Supercalifragilistic'),'Supercali');
+assert.equal(c.signFor({provider:'codex',project:'flea'}),'flea');assert.equal(c.signFor({provider:'grok',id:'01a02743-1111'}),'Grok 01a0');
+const signed=c.decorate(s,[{id:'s1',provider:'codex',name:'Fix Pulse bar layout'}]).buildings[0];assert.equal(signed.sign,'Fix Pulse');
+console.log('PASS whole-word roof signs from real names, project fallback, provider+ID last.');

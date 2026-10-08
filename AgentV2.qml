@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls as Controls
+import "AgentCityV2.js" as Agents
 Item {
  id:pane
  required property var city
@@ -210,7 +211,7 @@ Item {
    Text{id:sessionLabel;width:parent.width-144;height:38;verticalAlignment:Text.AlignVCenter;horizontalAlignment:Text.AlignHCenter;font.pixelSize:12;color:pane.city.ink;text:(!pane.providerFilter?"All providers":pane.providerFilter==="kimi"?"Kimi3":pane.providerFilter)+" · "+(pane.selectorAgents.length?(pane.selectorIndex>=0?"Session "+(pane.selectorIndex+1)+" / "+pane.selectorAgents.length:"Choose session · "+pane.selectorAgents.length+" available"):"No matching sessions")}
    NeonActionV2{id:sessionNext;city:pane.city;width:64;text:"→";enabled:!pane.busy&&pane.selectorIndex+1<pane.selectorAgents.length;onClicked:pane.chooseSession(pane.selectorIndex+1)}
   }
-  Text{width:parent.width;text:pane.selectedAgent?(pane.selectedAgent.label||"Selected session"):"Select any agent building to use this shared Desk. Adapter status is available below.";font.pixelSize:12;color:Qt.alpha(pane.city.ink,.72);wrapMode:Text.Wrap;textFormat:Text.PlainText}
+  Text{width:parent.width;text:pane.selectedAgent?Agents.displayName(pane.selectedAgent)+"  ·  "+Agents.subtitle(pane.selectedAgent)+"  ·  "+Agents.glow(pane.selectedAgent).label:"Select any agent building to use this shared Desk. Adapter status is available below.";font.pixelSize:12;color:Qt.alpha(pane.city.ink,.72);wrapMode:Text.Wrap;textFormat:Text.PlainText}
   Text{width:parent.width;text:pane.selectedAgent?(pane.selectedAgent.provider+" / "+pane.selectedAgent.id):"No session selected · No chat content has been requested.";font.pixelSize:12;color:pane.city.accent;wrapMode:Text.Wrap;textFormat:Text.PlainText}
   Text{width:parent.width;text:{var a=pane.selectedAgent;if(!a)return "";var s=a.status||{};return a.availability+" · Reported "+s.type+((s.activeFlags||[]).length?" / "+s.activeFlags.join(", "):"")+" · "+a.statusSource}font.pixelSize:12;color:pane.city.ink;wrapMode:Text.Wrap;textFormat:Text.PlainText}
  }
