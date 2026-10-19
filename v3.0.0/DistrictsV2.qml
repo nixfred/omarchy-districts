@@ -5,6 +5,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "CityV2.js" as City
 import "CameraV2.js" as Camera
@@ -186,7 +187,7 @@ Item {
   readonly property bool stale: !!snapshot.timestamp && Date.now()/1000-snapshot.timestamp>8
   readonly property string helper: decodeURIComponent(String(Qt.resolvedUrl("districts.py")).replace(/^file:\/\//,""))
   readonly property color accent: night?neons[0]:"#05647d"
-  readonly property bool lightTheme: Color.background.r*.2126+Color.background.g*.7152+Color.background.b*.0722>.55
+  readonly property bool lightTheme: Commons.Color.background.r*.2126+Commons.Color.background.g*.7152+Commons.Color.background.b*.0722>.55
   readonly property color ink: night?"#dceaff":"#18384b"
   readonly property color paper: night?"#060c19":"#e8eff3"
   readonly property var palette: ({accent:String(accent),ink:String(ink),neons:neons,
@@ -487,8 +488,8 @@ Item {
     id:button;anchors.fill:parent;bar:root.bar;labelVisible:false;hasVisualContent:true;fixedWidth:32
     tooltipText:"Districts · Your desktop city\n"+(root.message&&!root.opened?root.message:"Click to explore")
     onPressed:function(b){if(b===Qt.LeftButton)root.open()}
-    Canvas{id:skyline;anchors.centerIn:parent;width:25;height:23;onPaint:{var c=getContext("2d");c.reset();c.fillStyle=String(Color.accent);c.strokeStyle=String(Color.accent);c.lineWidth=1.1;City.polygon(c,[{x:1,y:21},{x:1,y:11},{x:4,y:8},{x:7,y:11},{x:7,y:21}],String(Color.accent));City.polygon(c,[{x:9,y:21},{x:9,y:5},{x:12,y:3},{x:15,y:5},{x:15,y:21}],String(Color.accent));City.polygon(c,[{x:17,y:21},{x:17,y:13},{x:21,y:11},{x:24,y:13},{x:24,y:21}],String(Color.accent));c.beginPath();c.moveTo(12,4);c.lineTo(12,0);c.stroke();c.clearRect(3,13,2,2);c.clearRect(11,8,2,2);c.clearRect(11,13,2,2);c.clearRect(19,15,2,2);c.beginPath();c.moveTo(0,22);c.lineTo(25,22);c.stroke()}}
-    Connections{target:Color;function onAccentChanged(){skyline.requestPaint()}}
+    Canvas{id:skyline;anchors.centerIn:parent;width:25;height:23;onPaint:{var c=getContext("2d");c.reset();c.fillStyle=String(Commons.Color.accent);c.strokeStyle=String(Commons.Color.accent);c.lineWidth=1.1;City.polygon(c,[{x:1,y:21},{x:1,y:11},{x:4,y:8},{x:7,y:11},{x:7,y:21}],String(Commons.Color.accent));City.polygon(c,[{x:9,y:21},{x:9,y:5},{x:12,y:3},{x:15,y:5},{x:15,y:21}],String(Commons.Color.accent));City.polygon(c,[{x:17,y:21},{x:17,y:13},{x:21,y:11},{x:24,y:13},{x:24,y:21}],String(Commons.Color.accent));c.beginPath();c.moveTo(12,4);c.lineTo(12,0);c.stroke();c.clearRect(3,13,2,2);c.clearRect(11,8,2,2);c.clearRect(11,13,2,2);c.clearRect(19,15,2,2);c.beginPath();c.moveTo(0,22);c.lineTo(25,22);c.stroke()}}
+    Connections{target:Commons.Color;function onAccentChanged(){skyline.requestPaint()}}
   }
   Loader {
     id:applicationLoader
@@ -650,7 +651,7 @@ Item {
         }
       }
       Text{x:root.ui.margin;width:stage.width;wrapMode:Text.Wrap;anchors.bottom:parent.bottom;anchors.bottomMargin:24;text:root.ui.compact?"DRAG pan  •  RIGHT DRAG orbit / tilt  •  WHEEL zoom  •  F overview":"DRAG pan   RIGHT / SHIFT DRAG orbit + tilt   WHEEL zoom   MINIMAP travel   TAB buildings   ENTER visit";color:Qt.alpha(root.ink,.55);font.pixelSize:12}
-      Text{anchors.right:parent.right;anchors.rightMargin:root.ui.margin;anchors.bottom:parent.bottom;anchors.bottomMargin:24;width:Math.min(root.ui.sidebar,body.width/3);horizontalAlignment:Text.AlignRight;elide:Text.ElideRight;font.pixelSize:11;color:root.failed?Color.urgent:Qt.alpha(root.ink,.7);text:root.message||(root.motion?"LIVE CITY / 15 FPS":"REDUCED MOTION")}
+      Text{anchors.right:parent.right;anchors.rightMargin:root.ui.margin;anchors.bottom:parent.bottom;anchors.bottomMargin:24;width:Math.min(root.ui.sidebar,body.width/3);horizontalAlignment:Text.AlignRight;elide:Text.ElideRight;font.pixelSize:11;color:root.failed?Commons.Color.urgent:Qt.alpha(root.ink,.7);text:root.message||(root.motion?"LIVE CITY / 15 FPS":"REDUCED MOTION")}
       NavigationV2{id:navigation;city:root;anchors.fill:parent;z:20;currentCamera:root.currentCamera;targetDistrict:root.selectedDistrict;districts:root.liveSnapshot.districts||[];motion:root.motion;persistenceBusy:bookmarks.running
         onCameraRequested:function(camera,target){root.restoreCamera(camera,target)}
         onTourDistrictRequested:function(id,instant){root.focusDistrict(id,true,instant)}
